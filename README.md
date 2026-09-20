@@ -9,8 +9,8 @@
 | Deployment transaction | [`0x16fce2914ce39a3300dd4ad246fb4e6f59265c10123a1425295605a18ded4fab`](https://explorer-studio.genlayer.com/tx/0x16fce2914ce39a3300dd4ad246fb4e6f59265c10123a1425295605a18ded4fab) |
 | Deployed source SHA-256 / parity | `c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1` / verified |
 | Local quality | 25 Direct Mode + 9 static tests passing (34 total); frontend typecheck/build passing |
-| Live lifecycle proofs | Not yet recorded; see [live evidence](docs/LIVE_EVIDENCE.md) |
-| Production frontend | Not deployed/verified; no production URL is claimed |
+| Live lifecycle proofs | OBSERVED, INCONCLUSIVE, retrospective NOT_OBSERVED, and EXTERNAL_FAILURE/retry verified; strong PRECOMMITTED NOT_OBSERVED remains |
+| Production frontend | Vercel status reports success; public production URL/browser verification still to be recorded |
 
 There is exactly one deployable Intelligent Contract: `contracts/abscene.py`. `NOT_OBSERVED` is bounded evidence for the frozen source universe and window; it does **not** mean the event definitely never happened.
 
@@ -201,7 +201,7 @@ The canonical StudioNet deployment is finalized and Explorer verified:
 - Deployed source commit: `050613bd383ea6a705850306fbf9db33ba2b3314`
 - Deployed source SHA-256: `c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1`
 
-Live lifecycle cases have not yet been verified. The deployment record does not stand in for case results. The local Direct Mode suite has 25 contract tests; the 9 static/source tests bring the suite to 34. After deploying the frontend, configure:
+Live StudioNet readback now verifies: case 2 = `OBSERVED`; case 3 = `INCONCLUSIVE`; case 4 = retrospective `NOT_OBSERVED` with `can_rely_on_absence() == false`; and cases 1/5 = fail-closed `EXTERNAL_FAILURE`, with case 5 proving retry-delay enforcement and two state-changing attempts under an unchanged definition hash. The remaining core proof is a `PRECOMMITTED` `NOT_OBSERVED` case with `can_rely_on_absence() == true`. See [`docs/LIVE_EVIDENCE.md`](docs/LIVE_EVIDENCE.md). The Direct Mode suite has 25 contract tests; the 9 static/source tests bring the suite to 34, and the latest GitHub Actions quality workflow is green. For the production frontend, configure:
 
 ```text
 VITE_CONTRACT_ADDRESS=<canonical StudioNet contract address>
