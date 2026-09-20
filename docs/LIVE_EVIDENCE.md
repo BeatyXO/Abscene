@@ -5,121 +5,89 @@
 - Network: GenLayer StudioNet, chain ID `61999` (`0xF22F`)
 - Contract: [`0x5402F3B8c999945f36a5e76395aC71b7f66dF024`](https://explorer-studio.genlayer.com/address/0x5402F3B8c999945f36a5e76395aC71b7f66dF024)
 - Deployment transaction: [`0x16fce2914ce39a3300dd4ad246fb4e6f59265c10123a1425295605a18ded4fab`](https://explorer-studio.genlayer.com/tx/0x16fce2914ce39a3300dd4ad246fb4e6f59265c10123a1425295605a18ded4fab)
-- Explorer status: `FINALIZED`
-- GenVM result: `SUCCESS`
-- Consensus result: `Accepted`
+- Explorer status: `FINALIZED`; GenVM `SUCCESS`; consensus `Accepted`
 - Deployed source commit: `050613bd383ea6a705850306fbf9db33ba2b3314`
 - `contracts/abscene.py` SHA-256: `c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1`
-- Source parity: verified against the 33,485-byte GitHub contract blob
+- Source parity: verified
 
-The deployed contract source remains unchanged. Current repository commits after deployment modify tests, CI, docs and evidence only.
+The deployed contract source remains unchanged.
 
 ## Verified live cases
 
-The canonical contract currently contains five cases. Their state was independently read from StudioNet with the GenLayer JS client and correlated with Explorer transactions. Machine-readable details are in [`studionet-lifecycle.json`](studionet-lifecycle.json).
-
-### Case 2 — OBSERVED ✅
-
-**Apple FY2025 Q2 results release**
+### Case 2 — OBSERVED
 
 - Mode: `RETROSPECTIVE`
-- Final outcome: `OBSERVED`
+- Outcome/status: `OBSERVED / FINAL`
+- Source: `OK / COMPLETE / IN_WINDOW`
+- `is_observed=true`; `receipt_matches=true`
+- Resolve tx: `0xa7eefe52ef198250543d1843f3aca6e433560867b132b92696d8d6aff77da6c3`
+
+### Case 3 — INCONCLUSIVE
+
+- Mode: `RETROSPECTIVE`
+- Outcome/status: `INCONCLUSIVE / FINAL`
+- Source: `OK / PARTIAL / NONE`
+- `can_rely_on_absence=false`; `receipt_matches=true`
+- Resolve tx: `0xe5f6bcb704f1d7700b500b8b8bafc69689da08596a875e4463fc4a60c8e085f0`
+
+### Case 4 — RETROSPECTIVE NOT_OBSERVED
+
+- Mode: `RETROSPECTIVE`
+- Outcome/status: `NOT_OBSERVED / FINAL`
+- Source: `OK / COMPLETE / NONE`
+- `strong_absence_receipt=false`
+- `can_rely_on_absence=false`; `receipt_matches=true`
+- Resolve tx: `0xb4f1fea85581fd748750aca20cffddd5a6093beb06cb9ef560303ac64a7f9d8c`
+
+### Cases 1 and 5 — EXTERNAL_FAILURE / retry
+
+The mandatory SEC EDGAR source was unavailable, so both cases correctly failed closed with `UNAVAILABLE / UNKNOWN / AMBIGUOUS` and `EXTERNAL_FAILURE / RETRYABLE`. Case 5 reached `attempt_count=2` with unchanged definition hash `65785507711528dbe9505a8b47146d51c26cbc5ead651a96b96d254eaa453c32`. Early retries were rejected by the retry-delay guard. The external endpoint remained unavailable, so recovery-to-final is not demonstrated.
+
+### Case 6 — PRECOMMITTED strong NOT_OBSERVED
+
+This completes Abscene's central live proof on the canonical deployment.
+
+- Title: `Precommitted Apple Q2 publication-window check`
+- Creator: `0x15222A8B856552334536461482b1c8c52AEe4A38`
+- Mode: `PRECOMMITTED`
+- Status: `FINAL`
+- Outcome: `NOT_OBSERVED`
+- Attempt count: `1`
+- Strong absence receipt: `true`
 - Source: Apple FY25 Q2 official release
+- Source URL: `https://www.apple.com/newsroom/2025/05/apple-reports-second-quarter-results/`
+- Source class: `OFFICIAL_LOG`
+- Mandatory: `true`
 - Fetch: `OK`
 - Coverage: `COMPLETE`
-- Occurrence: `IN_WINDOW`
-- `is_observed(...)`: `true`
+- Occurrence: `OUTSIDE_ONLY`
+- `can_rely_on_absence(...)`: `true`
 - `receipt_matches(...)`: `true`
-- Resolve tx: [`0xa7eefe52ef198250543d1843f3aca6e433560867b132b92696d8d6aff77da6c3`](https://explorer-studio.genlayer.com/tx/0xa7eefe52ef198250543d1843f3aca6e433560867b132b92696d8d6aff77da6c3)
+- Definition hash: `03b3b49624844581159b5135c387df0b5d03902aa63558ce00e8add07971697c`
+- Resolution hash: `ed59d0066976cf3baec15a77564f1037a3dd78031509ca2007b2f191ec02f04f`
+- Receipt hash: `f2580b0ec498964c9a6a701c6f697a662d4417b35f6f57c750e11dae003f846b`
+- Create tx: `0x496c7c3052a4bcd8d70b63a443c7561ceffa66133e499b2b7774b64e34d21ff4`
+- Add-source tx: `0x1a0ef7dd236c3edb70a16374ffe49bd1ed3278ef9f3c5448ae35ae536dbdd264`
+- Seal tx: `0x6811849780e9396ae396703cd64536fb246d5d8f9839a5da34125fd35711f128`
+- Resolve tx: [`0xeb5c41353f656644507ae134ec7cee73793b9f7dfaf2ca2a09d2e120d73843f4`](https://explorer-studio.genlayer.com/tx/0xeb5c41353f656644507ae134ec7cee73793b9f7dfaf2ca2a09d2e120d73843f4)
 
-Definition: `e21feb5b37b34885c6a3adc6c083cca535cf678695c47b330ee847477da8d576`
+The source page visibly identifies the named Apple fiscal Q2 2025 results release outside the frozen future observation window. Validators classified the exact official page `COMPLETE` for that named-release/date question and `OUTSIDE_ONLY`; deterministic contract logic therefore finalized `NOT_OBSERVED`. Because the source universe was sealed before the window, the typed strong-absence gate returned true.
 
-Receipt: `768382a8e23f5bfd77cb52fea3e36e2f2bba5dfe8c3a49b3a0ed83de50e320a5`
+## Proof provenance
 
-### Case 3 — INCONCLUSIVE ✅
+- Precommitted proof workflow run: `35544048010`
+- Workflow conclusion: `success`
+- Workflow head: `87ac6a0015ee83cd8786d9d39bc5cbd2166b9d6e`
+- Artifact: `abscene-precommit-proof`
+- Artifact ID: `10616536516`
+- Artifact SHA-256: `c3002c00d7518e9cfb4317914fc4beb56ea1e10a17ae7ea5e2539abfa3bbd853`
+- Artifact generated: `2026-09-20T23:33:41.868Z`
 
-**Apple vehicle announcement in Q2 release**
-
-- Mode: `RETROSPECTIVE`
-- Final outcome: `INCONCLUSIVE`
-- Fetch: `OK`
-- Coverage: `PARTIAL`
-- Occurrence: `NONE`
-- `can_rely_on_absence(...)`: `false`
-- `receipt_matches(...)`: `true`
-- Resolve tx: [`0xe5f6bcb704f1d7700b500b8b8bafc69689da08596a875e4463fc4a60c8e085f0`](https://explorer-studio.genlayer.com/tx/0xe5f6bcb704f1d7700b500b8b8bafc69689da08596a875e4463fc4a60c8e085f0)
-
-This proves incomplete mandatory coverage fails closed instead of manufacturing a negative receipt.
-
-### Case 4 — RETROSPECTIVE NOT_OBSERVED ✅
-
-**Apple release headline exact-match check**
-
-- Mode: `RETROSPECTIVE`
-- Final outcome: `NOT_OBSERVED`
-- Fetch: `OK`
-- Coverage: `COMPLETE`
-- Occurrence: `NONE`
-- Strong absence receipt: `false`
-- `can_rely_on_absence(...)`: `false`
-- `receipt_matches(...)`: `true`
-- Resolve tx: [`0xb4f1fea85581fd748750aca20cffddd5a6093beb06cb9ef560303ac64a7f9d8c`](https://explorer-studio.genlayer.com/tx/0xb4f1fea85581fd748750aca20cffddd5a6093beb06cb9ef560303ac64a7f9d8c)
-
-Definition: `daf6ee9ff96d4f85475cf8099ea0cf15e7b79e1cf253ac19635b944ce89b97bf`
-
-Receipt: `e84076e209acdb92d1b7ab3bd6e8b1d9426403e74074d73fe983711c856edaba`
-
-This proves a retrospective negative cannot masquerade as Abscene's strong precommitted absence receipt.
-
-### Cases 1 and 5 — EXTERNAL_FAILURE / retry behavior ✅ partial recovery proof
-
-Both cases use the mandatory SEC EDGAR Apple 8-K feed. StudioNet validators could not fetch the source, so the contract correctly derived:
-
-- Fetch: `UNAVAILABLE`
-- Coverage: `UNKNOWN`
-- Occurrence: `AMBIGUOUS`
-- Outcome: `EXTERNAL_FAILURE`
-- Status: `RETRYABLE`
-
-Case 5 reached `attempt_count = 2` with the same definition hash:
-
-`65785507711528dbe9505a8b47146d51c26cbc5ead651a96b96d254eaa453c32`
-
-Successful state-changing attempts:
-
-- Attempt 1: [`0x7af354bf369a5ff137105f8c3b8a84f9a806601f2b7c88e6715ac983725ec345`](https://explorer-studio.genlayer.com/tx/0x7af354bf369a5ff137105f8c3b8a84f9a806601f2b7c88e6715ac983725ec345)
-- Attempt 2: [`0x252cf40d58a65a67df6d4fbd33e0c3b5562e13381522deb72f4250731451d6c7`](https://explorer-studio.genlayer.com/tx/0x252cf40d58a65a67df6d4fbd33e0c3b5562e13381522deb72f4250731451d6c7)
-
-Early retries were rejected with `ABSCENE: retry delay has not elapsed`, proving the delay is enforced. The SEC endpoint remained unavailable, so a recovery-to-final-state transaction has not been demonstrated.
-
-## Remaining live proof
-
-One core proof remains:
-
-**PRECOMMITTED + NOT_OBSERVED + `can_rely_on_absence(...) == true`**
-
-Case 1 is genuinely `PRECOMMITTED`, but its mandatory SEC source was unavailable and therefore correctly became `EXTERNAL_FAILURE`. It cannot serve as the strong-negative proof.
-
-Once a precommitted case with a reachable mandatory source resolves to `NOT_OBSERVED`, Abscene's central live demonstration is complete.
+Earlier multi-case readback workflow: `35543751011`; artifact `abscene-live-readback`; digest `sha256:0d2d4f6e28f328705d1676839bba2bff62da5d500ab16f7d8935b852d6d20e4b`.
 
 ## Quality evidence
 
-Latest GitHub Actions quality run is green:
-
-- Python syntax + preflight: pass
-- GenVM lint/semantic validation: pass
-- GenVM ABI schema: pass
-- 25 Direct Mode contract tests + 9 static/source tests: pass
-- frontend typecheck: pass
-- frontend production build: pass
-
-## Readback provenance
-
-Live state was read from the public StudioNet contract using `genlayer-js` from a GitHub Actions runner and correlated with the Explorer transaction API.
-
-- Readback workflow run: `35543751011`
-- Artifact: `abscene-live-readback`
-- Artifact SHA-256: `0d2d4f6e28f328705d1676839bba2bff62da5d500ab16f7d8935b852d6d20e4b`
+The normal Quality workflow verifies Python syntax/preflight, GenVM lint and ABI schema, 25 Direct Mode contract tests + 9 static/source tests, frontend typecheck, and production build.
 
 ## Source and receipt boundary
 
