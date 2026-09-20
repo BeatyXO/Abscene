@@ -73,7 +73,7 @@ Inspect the entire repository first. Then finish it to a review-ready, live-prov
 
 ## Workspace status (2026-09-20)
 
-The current workspace has no `.git` directory and `gh auth status` reports invalid GitHub tokens. Outbound access to GitHub and StudioNet is blocked. Direct Mode runs locally (32 passing tests), frontend typecheck/build pass, and static GenVM lint passes; SDK semantic validation/schema/typecheck cannot load the Windows SDK cache (`WinError 5`). No deployment or live-case facts have been recorded. The user requested to deploy the frontend themselves in Vercel; provide the production env values from README after the canonical contract is available.
+The source commit `050613bd383ea6a705850306fbf9db33ba2b3314` was deployed to StudioNet 61999 and Explorer confirms the deployment is `FINALIZED`, with GenVM `SUCCESS` and consensus `Accepted`. Contract: `0x5402F3B8c999945f36a5e76395aC71b7f66dF024`; deployment transaction: `0x16fce2914ce39a3300dd4ad246fb4e6f59265c10123a1425295605a18ded4fab`; source SHA-256: `c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1`. The public GitHub `main` source blob was independently hashed and matches. Thirty-four Direct Mode tests passed, frontend typecheck/build passed, and static GenVM lint passed; GenVM SDK semantic validation/schema/typecheck previously hit Windows `WinError 5`. Live lifecycle cases remain outstanding. The user will deploy the frontend through Vercel using the env values in README. Push evidence updates to the existing `main` branch; do not claim lifecycle proof until corresponding finalized transactions and contract readback are recorded.
 
 ## Security and reviewer requirements
 

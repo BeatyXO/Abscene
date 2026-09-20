@@ -8,15 +8,25 @@
     "currency": "GEN"
   },
   "deployment": {
-    "status": "unverified",
-    "contract_address": null,
-    "transaction_hash": null,
-    "finality": null,
-    "execution_result": null,
-    "consensus_result": null,
-    "git_commit": null,
-    "source_sha256": null
+    "status": "confirmed",
+    "contract_address": "0x5402F3B8c999945f36a5e76395aC71b7f66dF024",
+    "explorer_url": "https://explorer-studio.genlayer.com/address/0x5402F3B8c999945f36a5e76395aC71b7f66dF024",
+    "transaction_hash": "0x16fce2914ce39a3300dd4ad246fb4e6f59265c10123a1425295605a18ded4fab",
+    "transaction_explorer_url": "https://explorer-studio.genlayer.com/tx/0x16fce2914ce39a3300dd4ad246fb4e6f59265c10123a1425295605a18ded4fab",
+    "finality": "FINALIZED",
+    "execution_result": "SUCCESS",
+    "consensus_result": "Accepted",
+    "created_at_explorer": "Sep 20, 2026, 10:06:49 PM",
+    "deployer": "0xee489567BDC0F52ab858E10a1d568f692135C089",
+    "git_commit": "050613bd383ea6a705850306fbf9db33ba2b3314",
+    "source_sha256": "c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1",
+    "source_parity": {
+      "status": "verified",
+      "github_main_sha256": "c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1",
+      "github_byte_count": 33485,
+      "explorer_source_readback": "The Explorer Contract > Code tab displays the deployed Abscene source; the exact GitHub main source file was uploaded for this deployment."
+    }
   },
   "cases": [],
-  "note": "No live transaction facts have been observed in the current workspace. Populate only from StudioNet Explorer and contract readback."
+  "note": "Deployment is Explorer-verified. No finalized lifecycle case transactions have been recorded yet; cases must be added only after StudioNet transaction and contract readback verification."
 }

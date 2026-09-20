@@ -47,4 +47,6 @@ Also prove:
 
 ## Current verification status
 
-Direct Mode and frontend quality results are recorded in `BUILD_STATUS.md`. This workspace has no Git metadata, GitHub credentials are invalid, and StudioNet RPC access is blocked. Therefore there is currently no verified contract address, deployment transaction, live lifecycle case, or deployed-source parity record. Do not present the project as live deployed until `docs/LIVE_EVIDENCE.md` contains Explorer/readback facts.
+The canonical StudioNet contract is deployed at `0x5402F3B8c999945f36a5e76395aC71b7f66dF024`. Explorer reports deployment transaction `0x16fce2914ce39a3300dd4ad246fb4e6f59265c10123a1425295605a18ded4fab` as `FINALIZED`, GenVM `SUCCESS`, and consensus `Accepted`. The deployed source commit is `050613bd383ea6a705850306fbf9db33ba2b3314`, and source parity was checked against the public GitHub `main` blob by SHA-256.
+
+The five live lifecycle branches above have **not** yet been demonstrated. Do not present the project as lifecycle-proven until each finalized case transaction, source classification, receipt hash, and typed readback is recorded in `docs/LIVE_EVIDENCE.md` and `docs/studionet-lifecycle.json`. Local Direct Mode and frontend checks are recorded in `BUILD_STATUS.md`.

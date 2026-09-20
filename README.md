@@ -182,7 +182,14 @@ npm run build
 
 ## Deployment and production configuration
 
-No canonical StudioNet deployment has been verified from this workspace. Deploy the one contract to chain 61999, confirm its finalized Explorer record, then configure the production frontend with:
+The canonical StudioNet deployment is finalized and Explorer verified:
+
+- Contract: [`0x5402F3B8c999945f36a5e76395aC71b7f66dF024`](https://explorer-studio.genlayer.com/address/0x5402F3B8c999945f36a5e76395aC71b7f66dF024)
+- Deployment transaction: [`0x16fce2914ce39a3300dd4ad246fb4e6f59265c10123a1425295605a18ded4fab`](https://explorer-studio.genlayer.com/tx/0x16fce2914ce39a3300dd4ad246fb4e6f59265c10123a1425295605a18ded4fab) (`FINALIZED`, GenVM `SUCCESS`, consensus `Accepted`)
+- Deployed source commit: `050613bd383ea6a705850306fbf9db33ba2b3314`
+- Deployed source SHA-256: `c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1`
+
+Live lifecycle cases have not yet been verified. The deployment record does not stand in for case results. After deploying the frontend, configure:
 
 ```text
 VITE_CONTRACT_ADDRESS=<canonical StudioNet contract address>
@@ -191,7 +198,7 @@ VITE_EXPLORER_BASE=https://explorer-studio.genlayer.com
 
 The repository default is deliberately empty. Never use a placeholder address. For Vercel, add both variables under Project Settings → Environment Variables for Production (and Preview if desired), then redeploy. The build uses `frontend/` as the project root; `vercel.json` defines the install/build/output commands from the repository root.
 
-The local Direct Mode suite and frontend quality gates are tracked in [`BUILD_STATUS.md`](BUILD_STATUS.md). Live deployment facts belong in [`docs/LIVE_EVIDENCE.md`](docs/LIVE_EVIDENCE.md) and [`docs/studionet-lifecycle.json`](docs/studionet-lifecycle.json); currently those files record the verification gap without inventing data. The reviewer flow is in [`docs/REVIEWER_DEMO.md`](docs/REVIEWER_DEMO.md).
+The local Direct Mode suite and frontend quality gates are tracked in [`BUILD_STATUS.md`](BUILD_STATUS.md). Deployment facts and the remaining live-case verification gap are recorded in [`docs/LIVE_EVIDENCE.md`](docs/LIVE_EVIDENCE.md) and [`docs/studionet-lifecycle.json`](docs/studionet-lifecycle.json). The reviewer flow is in [`docs/REVIEWER_DEMO.md`](docs/REVIEWER_DEMO.md).
 
 ## Submission thesis
 
