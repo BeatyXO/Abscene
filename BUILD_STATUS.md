@@ -40,17 +40,17 @@ Verified on the canonical deployment:
 
 See [`docs/LIVE_EVIDENCE.md`](docs/LIVE_EVIDENCE.md) and [`docs/studionet-lifecycle.json`](docs/studionet-lifecycle.json).
 
-## Submission blocker still open
+## Remaining live-proof enhancement
 
-Only one core lifecycle branch is still missing:
+The project is submission-capable with the current deployment, tests and live lifecycle evidence. One additional high-value live branch would strengthen the reviewer package:
 
 - **PRECOMMITTED + NOT_OBSERVED + `can_rely_on_absence(...) == true`**
 
-A successful external-failure recovery to a final state would strengthen the reviewer package, but the retry mechanism itself is already proven live and fully covered by Direct Mode.
+That branch is already proven in Direct Mode. A live instance is additional evidence, not a formal submission blocker. A successful external-failure recovery to a final state would also strengthen the package, but retry mechanics are already proven live and covered by Direct Mode.
 
 ## Frontend deployment
 
-GitHub reports the Vercel deployment status for the current project as `success`. The public production URL and real browser interaction against the canonical contract still need to be recorded before the submission form's required Website field is finalized.
+Production website: https://abscene.vercel.app/. Vercel deployment status is `success`, and this URL should be used for the submission form's required Website field.
 
 Production environment:
 
