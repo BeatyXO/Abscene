@@ -10,7 +10,7 @@
 | Deployed source SHA-256 / parity | `c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1` / verified |
 | Local quality | 25 Direct Mode + 9 static tests passing (34 total); frontend typecheck/build passing |
 | Live lifecycle proofs | OBSERVED, INCONCLUSIVE, retrospective NOT_OBSERVED, and EXTERNAL_FAILURE/retry verified; strong PRECOMMITTED NOT_OBSERVED remains |
-| Production frontend | Vercel status reports success; public production URL/browser verification still to be recorded |
+| Production frontend | [https://abscene.vercel.app/](https://abscene.vercel.app/) |
 
 There is exactly one deployable Intelligent Contract: `contracts/abscene.py`. `NOT_OBSERVED` is bounded evidence for the frozen source universe and window; it does **not** mean the event definitely never happened.
 
@@ -201,7 +201,7 @@ The canonical StudioNet deployment is finalized and Explorer verified:
 - Deployed source commit: `050613bd383ea6a705850306fbf9db33ba2b3314`
 - Deployed source SHA-256: `c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1`
 
-Live StudioNet readback now verifies: case 2 = `OBSERVED`; case 3 = `INCONCLUSIVE`; case 4 = retrospective `NOT_OBSERVED` with `can_rely_on_absence() == false`; and cases 1/5 = fail-closed `EXTERNAL_FAILURE`, with case 5 proving retry-delay enforcement and two state-changing attempts under an unchanged definition hash. The remaining core proof is a `PRECOMMITTED` `NOT_OBSERVED` case with `can_rely_on_absence() == true`. See [`docs/LIVE_EVIDENCE.md`](docs/LIVE_EVIDENCE.md). The Direct Mode suite has 25 contract tests; the 9 static/source tests bring the suite to 34, and the latest GitHub Actions quality workflow is green. For the production frontend, configure:
+Live StudioNet readback now verifies: case 2 = `OBSERVED`; case 3 = `INCONCLUSIVE`; case 4 = retrospective `NOT_OBSERVED` with `can_rely_on_absence() == false`; and cases 1/5 = fail-closed `EXTERNAL_FAILURE`, with case 5 proving retry-delay enforcement and two state-changing attempts under an unchanged definition hash. An additional high-value live proof still pending is a `PRECOMMITTED` `NOT_OBSERVED` case with `can_rely_on_absence() == true`; this branch is already covered by Direct Mode tests. See [`docs/LIVE_EVIDENCE.md`](docs/LIVE_EVIDENCE.md). The Direct Mode suite has 25 contract tests; the 9 static/source tests bring the suite to 34, and the latest GitHub Actions quality workflow is green. Production frontend: [https://abscene.vercel.app/](https://abscene.vercel.app/). Its production environment uses:
 
 ```text
 VITE_CONTRACT_ADDRESS=<canonical StudioNet contract address>
