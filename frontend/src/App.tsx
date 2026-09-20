@@ -54,6 +54,7 @@ function App() {
   const [recentTxs, setRecentTxs] = useState<string[]>([])
   const [loadingCases, setLoadingCases] = useState(false)
   const [networkCorrect, setNetworkCorrect] = useState(false)
+  const [walletMenuOpen, setWalletMenuOpen] = useState(false)
 
   const selected = useMemo(
     () => cases.find((item) => item.case_id === selectedId) ?? null,
@@ -61,6 +62,7 @@ function App() {
   )
 
   useEffect(() => {
+    if (window.localStorage.getItem('abscene:wallet-disconnected') === '1') return
     authorizedWallet()
       .then((snapshot) => {
         if (!snapshot) return
@@ -107,12 +109,33 @@ function App() {
     setNotice('')
     try {
       const connected = await connectWallet()
+      window.localStorage.removeItem('abscene:wallet-disconnected')
       setWallet(connected.address)
       setWalletClient(connected.client)
       setNetworkCorrect(true)
+      setWalletMenuOpen(false)
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Wallet connection failed.')
     }
+  }
+
+  async function copyWalletAddress() {
+    if (!wallet) return
+    try {
+      await navigator.clipboard.writeText(wallet)
+      setNotice('Wallet address copied.')
+    } catch {
+      setNotice('Could not copy the wallet address. Please copy it manually.')
+    }
+  }
+
+  function disconnectWallet() {
+    window.localStorage.setItem('abscene:wallet-disconnected', '1')
+    setWallet('')
+    setWalletClient(null)
+    setNetworkCorrect(false)
+    setWalletMenuOpen(false)
+    setNotice('Wallet disconnected from Abscene.')
   }
 
   async function runWrite(label: string, functionName: string, args: unknown[]) {
@@ -155,9 +178,32 @@ function App() {
         <div className="wallet-area">
           <span className={`network-dot ${networkCorrect ? 'network-ready' : 'network-off'}`} />
           <span className="network-name">{networkCorrect ? 'StudioNet · 61999' : 'StudioNet · switch wallet'}</span>
-          <button className="wallet-button" onClick={onConnect}>
-            {wallet ? `${wallet.slice(0, 6)}…${wallet.slice(-4)}` : 'Connect wallet'}
-          </button>
+          <div className="wallet-menu-wrap">
+            <button
+              className="wallet-button"
+              onClick={() => wallet ? setWalletMenuOpen((open) => !open) : onConnect()}
+              aria-haspopup={wallet ? 'menu' : undefined}
+              aria-expanded={wallet ? walletMenuOpen : undefined}
+            >
+              {wallet ? `${wallet.slice(0, 6)}…${wallet.slice(-4)}` : 'Connect wallet'}
+            </button>
+            {wallet && walletMenuOpen && (
+              <div className="wallet-menu" role="menu">
+                <div className="wallet-menu-address" title={wallet}>
+                  <span>Connected wallet</span>
+                  <code>{wallet}</code>
+                </div>
+                <button type="button" role="menuitem" onClick={copyWalletAddress}>
+                  <span>Copy address</span>
+                  <span aria-hidden="true">⧉</span>
+                </button>
+                <button type="button" role="menuitem" className="wallet-disconnect" onClick={disconnectWallet}>
+                  <span>Disconnect</span>
+                  <span aria-hidden="true">↗</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
