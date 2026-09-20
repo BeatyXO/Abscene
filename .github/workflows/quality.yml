@@ -23,7 +23,13 @@ jobs:
           python -m py_compile contracts/abscene.py
           python scripts/preflight.py
       - name: GenVM lint
+        env:
+          GENVM_VERSION: v0.2.16
         run: genvm-lint check contracts/abscene.py
+      - name: GenVM ABI schema
+        env:
+          GENVM_VERSION: v0.2.16
+        run: genvm-lint schema contracts/abscene.py
       - name: Direct Mode and source tests
         run: pytest -q
 

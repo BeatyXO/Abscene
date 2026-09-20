@@ -30,7 +30,7 @@ See [`docs/LIVE_EVIDENCE.md`](docs/LIVE_EVIDENCE.md) and [`docs/studionet-lifecy
 ## Submission blockers still open
 
 - Finalized live lifecycle proofs for `OBSERVED`, precommitted and retrospective `NOT_OBSERVED`, `INCONCLUSIVE`, and `EXTERNAL_FAILURE` followed by retry
-- GenVM SDK semantic validation/typecheck/schema could not complete locally: the installed cache fails with Windows `WinError 5`; the CI GenVM lint step itself passed
+- GenVM lint, semantic validation, and ABI schema pass with GenVM v0.2.16 pinned, matching the contract's declared runner dependency
 - Production frontend deployment and live interaction verification: no Vercel team/project credentials are available in this session, and no production URL is verified
 - Finalized StudioNet lifecycle proofs have not been run; the JSON evidence intentionally contains no case records
 
@@ -39,7 +39,8 @@ See [`docs/LIVE_EVIDENCE.md`](docs/LIVE_EVIDENCE.md) and [`docs/studionet-lifecy
 - `python -m py_compile contracts/abscene.py`: pass
 - `python scripts/preflight.py`: pass; one deployable contract; chain ID 61999
 - `pytest -q`: pass, 34 total (25 Direct Mode contract tests; 9 static/source tests)
-- `genvm-lint check contracts/abscene.py`: 3 static lint checks pass; `validate` and `schema` remain blocked locally by inaccessible cached SDK files
+- `GENVM_VERSION=v0.2.16 genvm-lint check contracts/abscene.py`: lint and semantic validation pass
+- `GENVM_VERSION=v0.2.16 genvm-lint schema contracts/abscene.py`: pass; 11 ABI methods extracted
 - `npm --prefix frontend run typecheck`: pass
 - `npm --prefix frontend run build`: pass (Vite warns that the GenLayer client bundle exceeds 500 kB)
 
