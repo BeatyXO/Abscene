@@ -1,6 +1,6 @@
 # Build Status
 
-## Implemented and locally verified
+## Implemented and verified
 
 - One deployable Intelligent Contract: `contracts/abscene.py`
 - Precommitted and retrospective observation modes derived from seal time
@@ -11,8 +11,11 @@
 - Definition, resolution, and receipt hashes with typed consumer gates
 - Full React/Vite frontend with injected wallet connection and StudioNet 61999 checks
 - Reviewer case registry, source/result visibility, retry controls, and Explorer links
-- 25 passing Direct Mode contract tests + 9 passing static/source tests (34 total)
-- CI, preflight checks, and architecture/security/reviewer documentation
+- 25 Direct Mode contract tests + 9 static/source tests (34 total)
+- GitHub Actions quality workflow: green
+- GenVM lint/semantic validation: pass
+- GenVM ABI schema: pass, 11 methods
+- Frontend typecheck/build: pass
 
 ## StudioNet deployment
 
@@ -23,32 +26,48 @@
 - Consensus result: `Accepted`
 - Deployed source commit: `050613bd383ea6a705850306fbf9db33ba2b3314`
 - Deployed source SHA-256: `c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1`
-- Source parity: GitHub `main` contract blob has the same SHA-256 and 33,485-byte length; Explorer displays the deployed source.
+- Source parity: verified; current contract blob remains unchanged
 
-See [`docs/LIVE_EVIDENCE.md`](docs/LIVE_EVIDENCE.md) and [`docs/studionet-lifecycle.json`](docs/studionet-lifecycle.json) for observed deployment evidence.
+## Live lifecycle proof
 
-## Submission blockers still open
+Verified on the canonical deployment:
 
-- Finalized live lifecycle proofs for `OBSERVED`, precommitted and retrospective `NOT_OBSERVED`, `INCONCLUSIVE`, and `EXTERNAL_FAILURE` followed by retry
-- GenVM lint, semantic validation, and ABI schema pass with GenVM v0.2.16 pinned, matching the contract's declared runner dependency
-- Production frontend deployment and live interaction verification: no Vercel team/project credentials are available in this session, and no production URL is verified
-- Finalized StudioNet lifecycle proofs have not been run; the JSON evidence intentionally contains no case records
+- Case 2: `OBSERVED`, source `OK / COMPLETE / IN_WINDOW`, `is_observed() == true`
+- Case 3: `INCONCLUSIVE`, source `OK / PARTIAL / NONE`
+- Case 4: retrospective `NOT_OBSERVED`, `can_rely_on_absence() == false`
+- Case 1: genuine `PRECOMMITTED` case that failed closed as `EXTERNAL_FAILURE` when SEC EDGAR was unavailable
+- Case 5: `EXTERNAL_FAILURE` with retry delay enforced, two state-changing attempts, unchanged definition hash, still `RETRYABLE`
 
-## Recorded local quality gates
+See [`docs/LIVE_EVIDENCE.md`](docs/LIVE_EVIDENCE.md) and [`docs/studionet-lifecycle.json`](docs/studionet-lifecycle.json).
 
-- `python -m py_compile contracts/abscene.py`: pass
-- `python scripts/preflight.py`: pass; one deployable contract; chain ID 61999
-- `pytest -q`: pass, 34 total (25 Direct Mode contract tests; 9 static/source tests)
-- `GENVM_VERSION=v0.2.16 genvm-lint check contracts/abscene.py`: lint and semantic validation pass
-- `GENVM_VERSION=v0.2.16 genvm-lint schema contracts/abscene.py`: pass; 11 ABI methods extracted
-- `npm --prefix frontend run typecheck`: pass
-- `npm --prefix frontend run build`: pass (Vite warns that the GenLayer client bundle exceeds 500 kB)
+## Submission blocker still open
 
-Vercel environment values after frontend deployment:
+Only one core lifecycle branch is still missing:
+
+- **PRECOMMITTED + NOT_OBSERVED + `can_rely_on_absence(...) == true`**
+
+A successful external-failure recovery to a final state would strengthen the reviewer package, but the retry mechanism itself is already proven live and fully covered by Direct Mode.
+
+## Frontend deployment
+
+GitHub reports the Vercel deployment status for the current project as `success`. The public production URL and real browser interaction against the canonical contract still need to be recorded before the submission form's required Website field is finalized.
+
+Production environment:
 
 ```text
 VITE_CONTRACT_ADDRESS=0x5402F3B8c999945f36a5e76395aC71b7f66dF024
 VITE_EXPLORER_BASE=https://explorer-studio.genlayer.com
 ```
 
-Direct Mode pins `sdk_version="v0.2.16"` through the supported `direct_deploy` override. This avoids genlayer-test 0.29.2 resolving `latest` to GenVM rc7, whose release lacks the `genvm-universal.tar.xz` asset expected by that test runner. The v0.2.16 release publishes the expected universal bundle; no tests are skipped or xfailed.
+## Quality gates
+
+- `python -m py_compile contracts/abscene.py`: pass
+- `python scripts/preflight.py`: pass
+- `pytest -q`: pass, 34 total
+- `GENVM_VERSION=v0.2.16 genvm-lint check contracts/abscene.py`: pass
+- `GENVM_VERSION=v0.2.16 genvm-lint schema contracts/abscene.py`: pass
+- `npm --prefix frontend run typecheck`: pass
+- `npm --prefix frontend run build`: pass
+- GitHub Actions: pass
+
+Direct Mode pins `sdk_version="v0.2.16"` because that release provides the universal bundle expected by `genlayer-test 0.29.2`. No tests are skipped or xfailed.
