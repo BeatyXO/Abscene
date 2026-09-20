@@ -1,0 +1,6 @@
+contract_root: contracts
+test_root: tests
+network:
+  name: studionet
+  chain_id: 61999
+  rpc: https://studio.genlayer.com/api
