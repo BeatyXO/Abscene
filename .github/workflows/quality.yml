@@ -1,4 +1,5 @@
 name: Quality
+
 on:
   push:
     branches: [main]
@@ -13,12 +14,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements.txt
-      - run: python -m py_compile contracts/abscene.py
-      - run: python scripts/preflight.py
-      - run: genvm-lint check contracts/abscene.py
-      - run: pytest -q
+      - name: Install contract tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Python syntax and project preflight
+        run: |
+          python -m py_compile contracts/abscene.py
+          python scripts/preflight.py
+      - name: GenVM lint
+        run: genvm-lint check contracts/abscene.py
+      - name: Direct Mode and source tests
+        run: pytest -q
 
   frontend:
     runs-on: ubuntu-latest
@@ -30,8 +37,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install --no-audit --no-fund
-      - run: npm run typecheck
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npm run typecheck
       - name: Production build
         env:
           VITE_CONTRACT_ADDRESS: '0x1111111111111111111111111111111111111111'

@@ -2,99 +2,106 @@
 
 You are taking over a substantially implemented GenLayer project named **Abscene**.
 
-Repository: https://github.com/BeatyXO/Abscene.git
+Do not replace the project with a different concept. Do not turn it into a contract-only submission. Do not add a second Intelligent Contract.
 
-Do not return only a plan. Inspect the entire repository first, then finish it in-place and push completed work to `main`.
-
-## Hard product boundary
-
-Abscene is a **full dApp** with exactly **one deployable Intelligent Contract**:
+The repository must remain a **full dApp with exactly one deployable GenLayer Intelligent Contract**:
 
 `contracts/abscene.py`
 
-Do not add a second Intelligent Contract. Do not remove the frontend.
+Target repository:
 
-Network is GenLayer **StudioNet only**:
+`https://github.com/BeatyXO/Abscene.git`
+
+Target network:
+
+- GenLayer StudioNet only
 - chain ID 61999
-- RPC https://studio.genlayer.com/api
-- explorer https://explorer-studio.genlayer.com
+- RPC `https://studio.genlayer.com/api`
+- explorer `https://explorer-studio.genlayer.com`
 
-Abscene freezes an event definition, occurrence rule, observation window and source universe. Validators classify source coverage/occurrence. Deterministic contract logic derives OBSERVED, NOT_OBSERVED, INCONCLUSIVE or EXTERNAL_FAILURE.
+## Product boundary
 
-The key mechanism is PRECOMMITTED vs RETROSPECTIVE. Only a case sealed before its window starts may produce a NOT_OBSERVED receipt that satisfies `can_rely_on_absence()`.
+Abscene freezes an event definition, occurrence rule, observation window and public source universe. After the window closes, validators inspect those exact sources. The model classifies source coverage and occurrence only; deterministic contract logic derives:
 
-## Finish the build
+- OBSERVED
+- NOT_OBSERVED
+- INCONCLUSIVE
+- EXTERNAL_FAILURE
 
-1. Install Python + frontend dependencies.
+The most important design distinction is PRECOMMITTED vs RETROSPECTIVE.
+
+Only a case sealed before its window begins can produce a `NOT_OBSERVED` result that satisfies `can_rely_on_absence()`.
+
+Do not weaken this.
+
+## Your job
+
+Inspect the entire repository first. Then finish it to a review-ready, live-proven state.
+
+1. Install Python and frontend dependencies.
 2. Run:
    - `python -m py_compile contracts/abscene.py`
    - `python scripts/preflight.py`
    - `pytest -q`
    - `genvm-lint check contracts/abscene.py`
-   - any current GenVM validation/typecheck command supported by installed tooling
-3. Add/expand Direct Mode coverage to at least 20 meaningful tests if the current suite is smaller. Required cases:
-   - precommitted sealing
-   - retrospective sealing
-   - immutable source universe
-   - duplicate source rejection
-   - mandatory OTHER rejection
-   - invalid/private URL rejection
-   - resolve-before-window rejection
-   - decisive OBSERVED despite another source failure
-   - complete mandatory coverage -> NOT_OBSERVED
-   - OUTSIDE_ONLY is not in-window
-   - PARTIAL -> INCONCLUSIVE
-   - UNKNOWN -> INCONCLUSIVE
-   - AMBIGUOUS -> INCONCLUSIVE
-   - mandatory fetch failure -> EXTERNAL_FAILURE
-   - retry delay
-   - successful retry with unchanged definition hash
-   - optional source failure does not block a negative receipt
-   - malformed model output fails closed
-   - validator disagreement rejects
-   - retrospective NOT_OBSERVED never satisfies can_rely_on_absence
-   - receipt binding/replay checks
-   - final case cannot be re-reviewed
-4. Fix every real runtime, ABI, GenVM, serialization, Direct Mode, TypeScript and SDK issue. Preserve the design.
-5. Run frontend typecheck/build. Commit `frontend/package-lock.json` after successful install.
-6. Deploy the exact final `contracts/abscene.py` source to StudioNet 61999.
-7. Record canonical:
-   - contract address
+   - any current GenVM validation/typecheck command supported by the installed tooling
+3. Fix every real runtime, Direct Mode, lint, serialization, ABI, SDK or TypeScript problem you find.
+4. Preserve one deployable contract only.
+5. Run the frontend typecheck and production build.
+6. Add a generated `frontend/package-lock.json` after successful install.
+7. Deploy the exact final `contracts/abscene.py` source to StudioNet 61999.
+8. Record:
+   - canonical contract address
    - deployment transaction
-   - finalization/execution status
-   - final Git commit
-   - SHA-256 of deployed source
-8. Prove source parity.
-9. Execute finalized live proof for:
-   - OBSERVED
-   - PRECOMMITTED + NOT_OBSERVED + can_rely_on_absence=true
-   - RETROSPECTIVE + NOT_OBSERVED + can_rely_on_absence=false
-   - INCONCLUSIVE
-   - EXTERNAL_FAILURE -> successful retry with same definition hash
-10. Use stable public HTTPS evidence. Never invent tx hashes, case IDs, validator counts or results.
-11. Save exact live evidence under `docs/` as both human-readable Markdown and machine-readable JSON.
-12. Set `VITE_CONTRACT_ADDRESS` in deployment environment. Keep the code default empty so missing config never points to a fake contract.
-13. Deploy frontend to Vercel if authenticated. If not, leave instructions and do not fabricate a URL.
-14. Update README/docs/BUILD_STATUS with only observed facts.
-15. Re-run all quality gates and push to `main`.
+   - finalization status
+   - source commit
+   - SHA-256 of the deployed contract source
+9. Prove source parity between the GitHub source and deployed source.
+10. Execute live finalized proof cases for all important branches:
+    - OBSERVED
+    - PRECOMMITTED + NOT_OBSERVED with `can_rely_on_absence() == true`
+    - RETROSPECTIVE + NOT_OBSERVED with `can_rely_on_absence() == false`
+    - INCONCLUSIVE from incomplete/unknown mandatory coverage
+    - EXTERNAL_FAILURE from a failing mandatory source, followed by a successful retry with the same definition hash
+11. Use small, stable, publicly accessible HTTPS evidence sources for live proof. Do not invent transactions, validator votes, addresses or results.
+12. Save exact live evidence under `docs/`, preferably machine-readable JSON plus a human-readable `docs/LIVE_EVIDENCE.md`.
+13. Update README, BUILD_STATUS and docs/SUBMISSION.md with only actually observed live facts.
+14. Set the canonical contract address in the frontend via environment configuration. Keep the source default empty so a missing environment never silently points to a fake deployment.
+15. Deploy the frontend to Vercel if authenticated tooling is available. If Vercel authentication is unavailable, leave precise deployment instructions and do not fabricate a URL.
+16. Re-run every local quality gate after live-proof changes.
+17. Push all completed work to `main`.
 
-## Security invariants
+## Workspace status (2026-09-20)
 
-- nondeterministic web/LLM work stays inside the GenLayer nondeterministic boundary
-- validators independently rederive state-driving classifications
-- model does not choose the final receipt
-- failed mandatory source cannot become NOT_OBSERVED
-- PARTIAL/UNKNOWN mandatory coverage cannot become NOT_OBSERVED
-- ambiguity remains fail-closed
-- INCONCLUSIVE is terminal; no reroll-until-favorable path
-- EXTERNAL_FAILURE may retry without mutating the definition
-- retrospective NOT_OBSERVED never satisfies the strong absence gate
-- prompt/user/source material remains untrusted data
-- no backend becomes canonical state
-- no fake UI data or deployment claims
+The current workspace has no `.git` directory and `gh auth status` reports invalid GitHub tokens. Outbound access to GitHub and StudioNet is blocked. Direct Mode runs locally (32 passing tests), frontend typecheck/build pass, and static GenVM lint passes; SDK semantic validation/schema/typecheck cannot load the Windows SDK cache (`WinError 5`). No deployment or live-case facts have been recorded. The user requested to deploy the frontend themselves in Vercel; provide the production env values from README after the canonical contract is available.
 
-## Quality benchmark
+## Security and reviewer requirements
 
-Use EviFix-level rigor for failure handling, tests, documentation, live evidence and reviewer clarity, but do **not** copy EviFix's patching architecture. Abscene must remain an observation/non-occurrence product.
+- Keep nondeterministic web/LLM work inside the GenLayer nondeterministic boundary.
+- Validators must independently rederive state-driving classifications.
+- Do not compare or trust arbitrary explanatory prose.
+- Do not let the LLM choose the final receipt.
+- Mandatory source failure must never become NOT_OBSERVED.
+- PARTIAL/UNKNOWN mandatory coverage must never become NOT_OBSERVED.
+- Semantic ambiguity must remain fail-closed.
+- INCONCLUSIVE must remain terminal; do not add a reroll-until-favorable path.
+- EXTERNAL_FAILURE may retry without mutating the definition.
+- Retrospective NOT_OBSERVED must never satisfy the strong absence gate.
+- Preserve prompt-injection separation between protocol instructions and untrusted source/user data.
+- No backend may become canonical state.
+- No fake UI data, transaction hashes, validator counts or deployment claims.
 
-When finished, report final HEAD, test counts, lint/typecheck/build results, contract address, deployment tx, source hash, live proof case IDs/txs, frontend URL if deployed, and anything still unverified.
+## Quality target
+
+Treat EviFix-level repository rigor as the benchmark for tests, docs, failure handling, live evidence and reviewer clarity, but do not copy EviFix's patching architecture. Abscene must remain its own observation/non-occurrence primitive.
+
+When finished, report:
+- final HEAD
+- exact test counts
+- lint/typecheck/build results
+- contract address
+- deployment transaction
+- source SHA-256
+- live proof case IDs and transaction hashes
+- frontend URL if actually deployed
+- anything still unverified

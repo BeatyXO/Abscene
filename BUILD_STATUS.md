@@ -3,44 +3,43 @@
 ## Implemented
 
 - one deployable contract: `contracts/abscene.py`
-- PRECOMMITTED vs RETROSPECTIVE observation modes
-- bounded source universe
+- precommitted and retrospective observation modes
+- bounded source registry
 - mandatory/optional coverage semantics
 - source fetching inside nondeterministic execution
-- structured semantic classification
+- structured LLM classification
 - independent validator re-derivation
 - deterministic final outcome
 - retryable external failure
 - hash-bound typed receipts
 - React/Vite frontend
-- injected StudioNet wallet support
-- chain ID 61999 lock
-- case/source creation, sealing, resolving and receipt display
-- Direct Mode starter tests
-- static repository invariants
+- injected wallet connection
+- StudioNet 61999 lock
+- case creation, source management, sealing, resolving and receipt display
+- 32 passing GenLayer Direct Mode tests, including prompt-injection, disagreement, retry cap and receipt binding cases
 - CI and preflight checks
-- architecture, threat-model and submission docs
-- Codex completion handoff
+- reviewer/security/architecture documentation
+- machine-readable StudioNet lifecycle evidence template
 
-## Verified here
+## Still requires GenLayer-capable runtime / authenticated deployment
 
-- Python syntax check passed on the fuller local build
-- project preflight passed on the fuller local build
-- static repository tests passed on the fuller local build
-- GitHub writes to `BeatyXO/Abscene` are confirmed
+- GenVM SDK semantic validation/typecheck/schema (the installed cache fails with Windows `WinError 5`; static lint succeeds)
+- deploy canonical source to StudioNet 61999
+- execute live semantic lifecycle proof
+- record contract/deployment tx/source hash
+- deploy frontend
+- push verified changes to `main` (workspace is missing `.git`; GitHub CLI authentication is invalid)
 
-## Still requires Codex / GenLayer-capable environment
+## Latest local gates
 
-- install dependencies
-- run and repair full Direct Mode suite
-- expand Direct Mode coverage to reviewer-grade depth
-- GenVM lint/validation
-- frontend typecheck/build
-- generate frontend package lock
-- deploy exact final source to StudioNet 61999
-- execute live semantic lifecycle proofs
-- record canonical contract address, deployment tx and source hash
-- configure/deploy frontend
-- capture live evidence
+- `python -m py_compile contracts/abscene.py`: pass
+- `python scripts/preflight.py`: pass; one deployable contract; chain ID 61999
+- `pytest -q`: pass, 32 tests (GenLayer Direct Mode)
+- `genvm-lint check contracts/abscene.py`: 3 static lint checks pass; validation blocked by inaccessible SDK cache
+- `npm --prefix frontend run typecheck`: pass
+- `npm --prefix frontend run build`: pass (Vite warns the GenLayer client bundle is larger than 500 kB)
+- npm install generated `frontend/package-lock.json`
+
+Vercel deployment remains user-run by request. Set `VITE_CONTRACT_ADDRESS` to the verified canonical contract and `VITE_EXPLORER_BASE=https://explorer-studio.genlayer.com` in Vercel Production environment variables, then redeploy.
 
 No live deployment claims are made yet.

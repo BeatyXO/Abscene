@@ -1,23 +1,114 @@
 # Architecture
 
-Abscene is a full dApp with exactly one Intelligent Contract. The browser is an operator/reviewer interface; canonical state lives in `contracts/abscene.py`.
+## Product boundary
 
-## State
+Abscene is a full application with exactly one Intelligent Contract. The browser is an operator and reviewer interface; canonical state lives in `contracts/abscene.py`.
 
-An ObservationCase freezes event semantics, occurrence rule, context, start/end times, source IDs, precommitment mode and receipt hashes. An ObservationSource freezes an HTTPS URL, source class, mandatory/optional role and an explicit coverage rule.
+The contract is intentionally not an escrow, truth oracle, dispute court, chronology comparator, source-independence graph or policy-upgrade gate. It answers one question:
 
-## Consensus boundary
+> Within a frozen observation universe and time window, did a qualifying event appear?
 
-`resolve_case()` performs source fetches and semantic classification inside one `run_nondet_unsafe` boundary. Validators independently re-run the same reads and classification. Consensus compares only state-driving fetch, coverage and occurrence enums.
+## State objects
 
-## Deterministic boundary
+### ObservationCase
 
-One supported in-window occurrence is enough for `OBSERVED`. A negative receipt is stricter: every mandatory source must fetch successfully, demonstrate `COMPLETE` window coverage and avoid an ambiguous qualifying occurrence.
+A case binds:
+
+- creator;
+- title;
+- event definition;
+- occurrence rule;
+- optional disambiguating context;
+- start/end timestamps;
+- source IDs;
+- mandatory-source count;
+- precommitment mode;
+- lifecycle state;
+- outcome;
+- definition, resolution and receipt hashes;
+- attempt count and retry timing.
+
+### ObservationSource
+
+A source binds:
+
+- case ID;
+- human label;
+- exact HTTPS URL;
+- source class;
+- explicit coverage rule;
+- mandatory/optional role;
+- immutable source-definition hash; and
+- latest consensus-backed fetch/coverage/occurrence classifications.
+
+## Source classes
+
+`OFFICIAL_LOG`, `OFFICIAL_FEED`, `PUBLIC_REGISTRY`, `SEARCH_INDEX` and `OTHER`.
+
+`OTHER` can only be supporting evidence. It cannot be mandatory for a negative receipt.
+
+Source class alone never proves complete coverage. Validators must still determine whether the visible material supports the frozen coverage rule across the requested window.
 
 ## Precommitment
 
-Seal time derives the mode. Before window start = `PRECOMMITTED`; otherwise = `RETROSPECTIVE`. Users cannot choose this flag. Only a finalized precommitted `NOT_OBSERVED` can satisfy `can_rely_on_absence()`.
+`seal_case()` computes the immutable definition hash.
 
-## Retry
+If sealing occurs before `window_start`, mode is `PRECOMMITTED`. Otherwise mode is `RETROSPECTIVE`.
 
-Only infrastructure-level `EXTERNAL_FAILURE` retries. The frozen definition cannot change. Semantic `INCONCLUSIVE` is terminal, preventing reroll-until-favorable behavior.
+The distinction cannot be selected by the user and cannot be changed later.
+
+## Nondeterministic boundary
+
+`resolve_case()` enters one `run_nondet_unsafe` boundary.
+
+Each validator:
+
+1. fetches the same exact frozen URLs;
+2. assigns a fetch code;
+3. sends only successfully fetched bounded content into one constrained semantic classification prompt;
+4. normalizes model output to fixed coverage and occurrence enums; and
+5. compares only the arrays that drive state.
+
+The classifier prompt explicitly marks the event text, occurrence rule, context, source URLs, coverage rules and fetched content as untrusted data. Source payload JSON preserves embedded newlines so instruction-like content remains visibly inside the source data object rather than being merged into protocol instructions.
+
+The prompt labels event text, occurrence rules, coverage rules, URLs and fetched source content as untrusted data.
+
+## Deterministic boundary
+
+After consensus returns, deterministic code derives the result.
+
+Positive occurrence is existential: one supported `IN_WINDOW` classification is enough.
+
+Negative occurrence is universal across mandatory sources: every mandatory source must be fetched, have `COMPLETE` coverage and avoid an ambiguous in-window event.
+
+This asymmetry is intentional. Proving one occurrence is easier than supporting bounded absence.
+
+## Retry model
+
+Only `EXTERNAL_FAILURE` is retryable.
+
+A retry:
+
+- keeps the definition hash unchanged;
+- cannot add or remove sources;
+- cannot change event semantics;
+- cannot change the time window; and
+- is rate-limited and capped.
+
+`INCONCLUSIVE` is terminal. Semantic ambiguity cannot be rerolled until a favorable model answer appears.
+
+## Receipt bindings
+
+`definition_hash` commits the case and source universe.
+
+`resolution_hash` commits the attempt's source classifications and derived outcome.
+
+`receipt_hash` commits the definition hash, resolution hash, mode, window and final outcome.
+
+Downstream consumers can use:
+
+- `is_observed(...)`;
+- `can_rely_on_absence(...)`; or
+- `receipt_matches(...)`.
+
+`can_rely_on_absence()` requires a finalized, precommitted `NOT_OBSERVED` result.

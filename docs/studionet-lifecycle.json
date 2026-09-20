@@ -1,0 +1,22 @@
+{
+  "network": {
+    "name": "GenLayer StudioNet",
+    "chain_id": 61999,
+    "chain_hex": "0xF22F",
+    "rpc": "https://studio.genlayer.com/api",
+    "explorer": "https://explorer-studio.genlayer.com",
+    "currency": "GEN"
+  },
+  "deployment": {
+    "status": "unverified",
+    "contract_address": null,
+    "transaction_hash": null,
+    "finality": null,
+    "execution_result": null,
+    "consensus_result": null,
+    "git_commit": null,
+    "source_sha256": null
+  },
+  "cases": [],
+  "note": "No live transaction facts have been observed in the current workspace. Populate only from StudioNet Explorer and contract readback."
+}

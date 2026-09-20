@@ -1,104 +1,727 @@
-import { FormEvent, useEffect, useState } from 'react'
-import { configured, connectWallet, explorerAddress, readContract, writeContract, type WalletClient } from './lib/genlayer'
-import './styles.css'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { StatusPill, OutcomeMark } from './components/StatusPill'
+import {
+  CONTRACT_ADDRESS,
+  contractConfigured,
+  connectWallet,
+  authorizedWallet,
+  explorerAddress,
+  explorerTx,
+  readContract,
+  submitAndFinalize,
+  type WalletClient,
+} from './lib/genlayer'
+import type { ObservationCase, ObservationSource } from './types'
 
-type Case = {
-  case_id:number; creator:string; title:string; event_definition:string; occurrence_rule:string;
-  context:string; window_start:number; window_end:number; status_name:string; mode_name:string;
-  outcome_name:string; source_ids:number[]; mandatory_source_count:number; definition_hash:string;
-  resolution_hash:string; receipt_hash:string; attempt_count:number; retry_after:number; strong_absence_receipt:boolean;
+type View = 'overview' | 'create' | 'cases'
+
+const SOURCE_CLASSES = [
+  { value: 1, label: 'Official log' },
+  { value: 2, label: 'Official feed' },
+  { value: 3, label: 'Public registry' },
+  { value: 4, label: 'Search index' },
+  { value: 5, label: 'Other / supporting' },
+]
+
+function unixFromLocal(value: string) {
+  return Math.floor(new Date(value).getTime() / 1000)
 }
-type Source = {
-  source_id:number; label:string; url:string; source_class_name:string; coverage_rule:string; mandatory:boolean;
-  fetch_name:string; coverage_name:string; occurrence_name:string; reviewed_at:number;
+
+function formatDate(value: number) {
+  if (!value) return '—'
+  return new Date(value * 1000).toLocaleString()
 }
 
-const fmt=(x:number)=>x?new Date(x*1000).toLocaleString():'—'
-const short=(x:string)=>x?x.slice(0,10)+'…'+x.slice(-8):'—'
+function shortHash(value: string) {
+  if (!value) return '—'
+  return `${value.slice(0, 10)}…${value.slice(-8)}`
+}
 
-export default function App(){
-  const [wallet,setWallet]=useState(''); const [client,setClient]=useState<WalletClient|null>(null)
-  const [cases,setCases]=useState<Case[]>([]); const [selected,setSelected]=useState<Case|null>(null)
-  const [sources,setSources]=useState<Source[]>([]); const [msg,setMsg]=useState(''); const [busy,setBusy]=useState('')
-  const [view,setView]=useState<'home'|'create'|'cases'>('home')
-  const [form,setForm]=useState({title:'',event:'',rule:'',context:'',start:'',end:''})
-  const [sourceForm,setSourceForm]=useState({label:'',url:'',sourceClass:1,coverage:'',mandatory:true})
+function addressMatch(a?: string, b?: string) {
+  return Boolean(a && b && a.toLowerCase() === b.toLowerCase())
+}
 
-  async function loadCases(){
-    if(!configured()) return
-    const count=Number(await readContract<number>('get_case_count'))
-    const ids=Array.from({length:Math.min(count,50)},(_,i)=>count-i).filter(Boolean)
-    const rows=await Promise.all(ids.map(id=>readContract<Case>('get_case',[id])))
-    setCases(rows); if(!selected&&rows[0]) setSelected(rows[0])
+function App() {
+  const [view, setView] = useState<View>('overview')
+  const [wallet, setWallet] = useState('')
+  const [walletClient, setWalletClient] = useState<WalletClient | null>(null)
+  const [cases, setCases] = useState<ObservationCase[]>([])
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [sources, setSources] = useState<ObservationSource[]>([])
+  const [busy, setBusy] = useState('')
+  const [notice, setNotice] = useState('')
+  const [lastTx, setLastTx] = useState('')
+  const [recentTxs, setRecentTxs] = useState<string[]>([])
+  const [loadingCases, setLoadingCases] = useState(false)
+  const [networkCorrect, setNetworkCorrect] = useState(false)
+
+  const selected = useMemo(
+    () => cases.find((item) => item.case_id === selectedId) ?? null,
+    [cases, selectedId],
+  )
+
+  useEffect(() => {
+    authorizedWallet()
+      .then((snapshot) => {
+        if (!snapshot) return
+        setWallet(snapshot.address)
+        setNetworkCorrect(Boolean(snapshot.client))
+        if (snapshot.client) setWalletClient(snapshot.client)
+      })
+      .catch(() => undefined)
+  }, [])
+
+  async function refreshCases(preselect?: number) {
+    if (!contractConfigured()) return
+    setLoadingCases(true)
+    try {
+      const count = Number(await readContract<number>('get_case_count'))
+      const ids = Array.from({ length: Math.min(count, 60) }, (_, i) => count - i).filter((x) => x > 0)
+      const loaded = await Promise.all(ids.map((id) => readContract<ObservationCase>('get_case', [id])))
+      setCases(loaded)
+      const next = preselect ?? selectedId
+      if (next && loaded.some((item) => item.case_id === next)) setSelectedId(next)
+      else if (!selectedId && loaded[0]) setSelectedId(loaded[0].case_id)
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'Could not load StudioNet cases.')
+    } finally {
+      setLoadingCases(false)
+    }
   }
-  useEffect(()=>{loadCases().catch(e=>setMsg(String(e)))},[])
-  useEffect(()=>{ if(!selected||!configured()){setSources([]);return}
-    Promise.all(selected.source_ids.map(id=>readContract<Source>('get_source',[id]))).then(setSources).catch(e=>setMsg(String(e)))
-  },[selected?.case_id,selected?.attempt_count,selected?.outcome_name])
 
-  async function connect(){try{const w=await connectWallet();setWallet(w.address);setClient(w.client)}catch(e){setMsg(e instanceof Error?e.message:String(e))}}
-  async function tx(label:string,fn:string,args:unknown[]){
-    if(!client){await connect();return}
-    setBusy(label); setMsg('')
-    try{const hash=await writeContract(client,fn,args);setMsg(label+' submitted: '+hash);await loadCases()}
-    catch(e){setMsg(e instanceof Error?e.message:String(e))} finally{setBusy('')}
+  useEffect(() => {
+    refreshCases().catch(() => undefined)
+  }, [])
+
+  useEffect(() => {
+    if (!selected || !contractConfigured()) {
+      setSources([])
+      return
+    }
+    Promise.all(selected.source_ids.map((id) => readContract<ObservationSource>('get_source', [id])))
+      .then(setSources)
+      .catch((error) => setNotice(error instanceof Error ? error.message : 'Could not load sources.'))
+  }, [selected?.case_id, selected?.resolved_at, selected?.attempt_count])
+
+  async function onConnect() {
+    setNotice('')
+    try {
+      const connected = await connectWallet()
+      setWallet(connected.address)
+      setWalletClient(connected.client)
+      setNetworkCorrect(true)
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'Wallet connection failed.')
+    }
   }
-  async function create(e:FormEvent){e.preventDefault();await tx('Create case','create_case',[form.title,form.event,form.rule,form.context,Math.floor(new Date(form.start).getTime()/1000),Math.floor(new Date(form.end).getTime()/1000)]);setView('cases')}
-  async function addSource(e:FormEvent){e.preventDefault();if(!selected)return;await tx('Add source','add_source',[selected.case_id,sourceForm.label,sourceForm.url,sourceForm.sourceClass,sourceForm.coverage,sourceForm.mandatory])}
 
-  return <div className="app">
-    <header>
-      <button className="brand" onClick={()=>setView('home')}><b>A</b><span><strong>Abscene</strong><small>observation receipts</small></span></button>
-      <nav><button onClick={()=>setView('home')}>Overview</button><button onClick={()=>setView('create')}>Create</button><button onClick={()=>setView('cases')}>Cases</button></nav>
-      <div className="wallet"><span>● StudioNet 61999</span><button onClick={connect}>{wallet?wallet.slice(0,6)+'…'+wallet.slice(-4):'Connect wallet'}</button></div>
-    </header>
+  async function runWrite(label: string, functionName: string, args: unknown[]) {
+    if (!walletClient) throw new Error('Connect a wallet on StudioNet first.')
+    setBusy(label)
+    setNotice('')
+    setLastTx('')
+    try {
+      const hash = await submitAndFinalize(walletClient, functionName, args, (submitted) => {
+        setLastTx(submitted)
+        setRecentTxs((current) => [submitted, ...current.filter((value) => value !== submitted)].slice(0, 8))
+      })
+      setNotice(`${label} finalized successfully.`)
+      await refreshCases(selectedId ?? undefined)
+      return hash
+    } finally {
+      setBusy('')
+    }
+  }
 
-    {!configured()&&<div className="banner"><b>Deployment pending.</b> Set <code>VITE_CONTRACT_ADDRESS</code> after the one contract is deployed to StudioNet 61999.</div>}
-    {msg&&<div className="notice">{msg}</div>}
+  const finalCount = cases.filter((item) => item.status_name === 'FINAL').length
+  const strongCount = cases.filter((item) => item.strong_absence_receipt).length
+  const observedCount = cases.filter((item) => item.outcome_name === 'OBSERVED').length
 
-    <main>
-      {view==='home'&&<section className="home">
-        <p className="eyebrow">Consensus-backed observation</p>
-        <h1>Prove what the committed sources <em>didn’t show.</em></h1>
-        <p className="lead">Abscene freezes an event, a time window and a public source universe. After the window closes, GenLayer validators inspect those exact sources and the contract derives a bounded observation receipt.</p>
-        <div className="actions"><button className="primary" onClick={()=>setView('create')}>Create observation</button><button onClick={()=>setView('cases')}>Open registry</button></div>
-        <div className="boundary"><article><b>PRECOMMITTED</b><h3>Strong absence receipt</h3><p>The source universe was sealed before the window opened. A finalized NOT_OBSERVED result can satisfy <code>can_rely_on_absence()</code>.</p></article><article><b>RETROSPECTIVE</b><h3>Historical observation only</h3><p>No qualifying occurrence was found, but the case cannot masquerade as a precommitted negative proof.</p></article></div>
-      </section>}
+  return (
+    <div className="app-shell">
+      <header className="topbar">
+        <button className="brand" onClick={() => setView('overview')}>
+          <span className="brand-mark">A</span>
+          <span>
+            <strong>Abscene</strong>
+            <small>bounded observation receipts</small>
+          </span>
+        </button>
+        <nav>
+          <button className={view === 'overview' ? 'nav-active' : ''} onClick={() => setView('overview')}>Overview</button>
+          <button className={view === 'create' ? 'nav-active' : ''} onClick={() => setView('create')}>Create</button>
+          <button className={view === 'cases' ? 'nav-active' : ''} onClick={() => setView('cases')}>Cases</button>
+        </nav>
+        <div className="wallet-area">
+          <span className={`network-dot ${networkCorrect ? 'network-ready' : 'network-off'}`} />
+          <span className="network-name">{networkCorrect ? 'StudioNet · 61999' : 'StudioNet · switch wallet'}</span>
+          <button className="wallet-button" onClick={onConnect}>
+            {wallet ? `${wallet.slice(0, 6)}…${wallet.slice(-4)}` : 'Connect wallet'}
+          </button>
+        </div>
+      </header>
 
-      {view==='create'&&<section className="create"><div><p className="eyebrow">New observation</p><h2>Define the event before you define the evidence.</h2><p>Seal the source universe before the observation window starts to earn PRECOMMITTED status.</p></div>
-        <form onSubmit={create}>
-          <label>Title<input required value={form.title} onChange={e=>setForm({...form,title:e.target.value})}/></label>
-          <label>Event definition<textarea required value={form.event} onChange={e=>setForm({...form,event:e.target.value})}/></label>
-          <label>What counts as occurrence?<textarea required value={form.rule} onChange={e=>setForm({...form,rule:e.target.value})}/></label>
-          <label>Context<textarea value={form.context} onChange={e=>setForm({...form,context:e.target.value})}/></label>
-          <div className="split"><label>Window starts<input type="datetime-local" required value={form.start} onChange={e=>setForm({...form,start:e.target.value})}/></label><label>Window ends<input type="datetime-local" required value={form.end} onChange={e=>setForm({...form,end:e.target.value})}/></label></div>
-          <button className="primary" disabled={!!busy}>{busy||'Create draft'}</button>
-        </form>
-      </section>}
+      {!contractConfigured() && (
+        <div className="setup-banner">
+          <strong>Deployment pending.</strong>
+          <span>Set <code>VITE_CONTRACT_ADDRESS</code> after deploying the one Abscene contract to StudioNet 61999.</span>
+        </div>
+      )}
 
-      {view==='cases'&&<section className="cases">
-        <aside><h2>Observation cases</h2>{cases.map(c=><button className={selected?.case_id===c.case_id?'active':''} key={c.case_id} onClick={()=>setSelected(c)}><small>#{c.case_id} · {c.status_name}</small><strong>{c.title}</strong><span>{c.mode_name} · {c.outcome_name}</span></button>)}</aside>
-        <div className="detail">{!selected?<p>Select a case.</p>:<>
-          <div className="title"><div><p className="eyebrow">Case #{selected.case_id}</p><h2>{selected.title}</h2></div><div className="pills"><span>{selected.mode_name}</span><span>{selected.status_name}</span></div></div>
-          <div className="result"><b>{selected.outcome_name}</b><p>{selected.strong_absence_receipt?'Strong precommitted absence receipt.':selected.outcome_name==='NOT_OBSERVED'?'Retrospective negative observation; strong absence gate is false.':'Result is bounded to this source universe and time window.'}</p></div>
-          <div className="cards"><article><small>EVENT</small><p>{selected.event_definition}</p></article><article><small>OCCURRENCE RULE</small><p>{selected.occurrence_rule}</p></article><article><small>WINDOW</small><p>{fmt(selected.window_start)} → {fmt(selected.window_end)}</p></article></div>
+      {notice && (
+        <div className="notice">
+          <span>{notice}</span>
+          <button onClick={() => setNotice('')}>×</button>
+        </div>
+      )}
 
-          {wallet&&wallet.toLowerCase()===selected.creator.toLowerCase()&&selected.status_name==='DRAFT'&&<form className="sourceForm" onSubmit={addSource}>
-            <input placeholder="Source label" required value={sourceForm.label} onChange={e=>setSourceForm({...sourceForm,label:e.target.value})}/>
-            <input placeholder="https://..." required value={sourceForm.url} onChange={e=>setSourceForm({...sourceForm,url:e.target.value})}/>
-            <select value={sourceForm.sourceClass} onChange={e=>setSourceForm({...sourceForm,sourceClass:Number(e.target.value),mandatory:Number(e.target.value)===5?false:sourceForm.mandatory})}><option value={1}>Official log</option><option value={2}>Official feed</option><option value={3}>Public registry</option><option value={4}>Search index</option><option value={5}>Other/supporting</option></select>
-            <textarea placeholder="Coverage rule for the full observation window" required value={sourceForm.coverage} onChange={e=>setSourceForm({...sourceForm,coverage:e.target.value})}/>
-            <label className="check"><input type="checkbox" disabled={sourceForm.sourceClass===5} checked={sourceForm.mandatory} onChange={e=>setSourceForm({...sourceForm,mandatory:e.target.checked})}/> required for negative coverage</label>
-            <button disabled={!!busy}>{busy||'Add source'}</button>
-          </form>}
+      {lastTx && (
+        <a className="tx-strip" href={explorerTx(lastTx)} target="_blank" rel="noreferrer">
+          Finalized transaction {shortHash(lastTx)} ↗
+        </a>
+      )}
 
-          <div className="sources">{sources.map(s=><article key={s.source_id}><div><strong>{s.label}{s.mandatory?' · required':''}</strong><a href={s.url} target="_blank">{s.source_class_name} ↗</a><p>{s.coverage_rule}</p></div><span>{s.fetch_name}</span><span>{s.coverage_name}</span><span>{s.occurrence_name}</span></article>)}</div>
+      {recentTxs.length > 0 && (
+        <div className="recent-transactions" aria-label="Recent transactions">
+          <span>Recent StudioNet transactions</span>
+          {recentTxs.map((hash) => (
+            <a key={hash} href={explorerTx(hash)} target="_blank" rel="noreferrer">{shortHash(hash)} ↗</a>
+          ))}
+        </div>
+      )}
 
-          <div className="hashes"><div><span>Definition</span><code>{short(selected.definition_hash)}</code></div><div><span>Resolution</span><code>{short(selected.resolution_hash)}</code></div><div><span>Receipt</span><code>{short(selected.receipt_hash)}</code></div></div>
-          <div className="actions">{wallet&&wallet.toLowerCase()===selected.creator.toLowerCase()&&selected.status_name==='DRAFT'&&<button className="primary" onClick={()=>tx('Seal case','seal_case',[selected.case_id])}>Seal source universe</button>}{(selected.status_name==='SEALED'||selected.status_name==='RETRYABLE')&&Math.floor(Date.now()/1000)>=selected.window_end&&<button className="primary" onClick={()=>tx('Resolve','resolve_case',[selected.case_id])}>{selected.status_name==='RETRYABLE'?'Retry observation':'Resolve observation'}</button>}</div>
-        </>}</div>
-      </section>}
-    </main>
-    <footer><span>Abscene · one Intelligent Contract · StudioNet 61999</span>{configured()&&<a href={explorerAddress()} target="_blank">Explorer ↗</a>}</footer>
-  </div>
+      <main>
+        {view === 'overview' && (
+          <Overview
+            total={cases.length}
+            finalized={finalCount}
+            strong={strongCount}
+            observed={observedCount}
+            onCreate={() => setView('create')}
+            onCases={() => setView('cases')}
+          />
+        )}
+
+        {view === 'create' && (
+          <CreateCase
+            busy={busy}
+            walletReady={Boolean(walletClient)}
+            onConnect={onConnect}
+            onCreated={async (args) => {
+              await runWrite('Create observation case', 'create_case', args)
+              await refreshCases()
+              setView('cases')
+            }}
+          />
+        )}
+
+        {view === 'cases' && (
+          <section className="cases-layout">
+            <aside className="case-list-panel">
+              <div className="panel-heading">
+                <div>
+                  <p className="eyebrow">Registry</p>
+                  <h2>Observation cases</h2>
+                </div>
+                <button className="icon-button" onClick={() => refreshCases()} disabled={loadingCases}>
+                  {loadingCases ? '…' : '↻'}
+                </button>
+              </div>
+              <div className="case-list">
+                {cases.length === 0 && <div className="empty">No on-chain cases yet.</div>}
+                {cases.map((item) => (
+                  <button
+                    key={item.case_id}
+                    className={`case-row ${selectedId === item.case_id ? 'selected' : ''}`}
+                    onClick={() => setSelectedId(item.case_id)}
+                  >
+                    <div className="case-row-top">
+                      <span>#{item.case_id}</span>
+                      <StatusPill value={item.status_name} />
+                    </div>
+                    <strong>{item.title}</strong>
+                    <div className="case-row-bottom">
+                      <span>{item.mode_name.replace('_', ' ')}</span>
+                      <span>{item.outcome_name.replace('_', ' ')}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </aside>
+
+            <section className="detail-panel">
+              {!selected ? (
+                <div className="empty-detail">
+                  <span className="orb">○</span>
+                  <h2>Select an observation case</h2>
+                  <p>Inspect its frozen universe, source coverage and final receipt.</p>
+                </div>
+              ) : (
+                <CaseDetail
+                  item={selected}
+                  sources={sources}
+                  wallet={wallet}
+                  busy={busy}
+                  onAddSource={async (args) => {
+                    await runWrite('Add observation source', 'add_source', [selected.case_id, ...args])
+                  }}
+                  onSeal={async () => {
+                    await runWrite('Seal observation universe', 'seal_case', [selected.case_id])
+                  }}
+                  onResolve={async () => {
+                    await runWrite('Resolve observation', 'resolve_case', [selected.case_id])
+                  }}
+                />
+              )}
+            </section>
+          </section>
+        )}
+      </main>
+
+      <footer>
+        <span>Abscene · one Intelligent Contract · GenLayer StudioNet</span>
+        {contractConfigured() && (
+          <a href={explorerAddress()} target="_blank" rel="noreferrer">
+            {shortHash(CONTRACT_ADDRESS)} ↗
+          </a>
+        )}
+      </footer>
+    </div>
+  )
 }
+
+function Overview({
+  total,
+  finalized,
+  strong,
+  observed,
+  onCreate,
+  onCases,
+}: {
+  total: number
+  finalized: number
+  strong: number
+  observed: number
+  onCreate: () => void
+  onCases: () => void
+}) {
+  return (
+    <section className="overview">
+      <div className="hero-grid">
+        <div className="hero-copy">
+          <p className="eyebrow">Consensus-backed observation</p>
+          <h1>Prove what the committed sources <em>didn’t show.</em></h1>
+          <p className="hero-lead">
+            Abscene freezes an event definition, a time window and a public source universe.
+            After the window closes, GenLayer validators inspect those exact sources and the
+            contract derives a bounded observation receipt.
+          </p>
+          <div className="hero-actions">
+            <button className="primary" onClick={onCreate}>Create observation</button>
+            <button className="secondary" onClick={onCases}>Open registry</button>
+          </div>
+        </div>
+
+        <div className="signal-card">
+          <div className="signal-ring">
+            <span className="ring-one" />
+            <span className="ring-two" />
+            <span className="signal-core">∅</span>
+          </div>
+          <div className="signal-copy">
+            <p>Negative result boundary</p>
+            <strong>NOT_OBSERVED ≠ never happened</strong>
+            <span>It means no qualifying occurrence was found inside the exact committed observation universe.</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="metrics">
+        <Metric label="Cases" value={total} />
+        <Metric label="Finalized" value={finalized} />
+        <Metric label="Strong absence receipts" value={strong} />
+        <Metric label="Observed events" value={observed} />
+      </div>
+
+      <div className="principles-grid">
+        <article>
+          <span className="step">01</span>
+          <h3>Freeze the question</h3>
+          <p>Define what counts as occurrence, the exact window, and which sources are required before observation begins.</p>
+        </article>
+        <article>
+          <span className="step">02</span>
+          <h3>Inspect the universe</h3>
+          <p>Validators independently fetch the same bounded public sources and classify coverage and occurrence.</p>
+        </article>
+        <article>
+          <span className="step">03</span>
+          <h3>Derive the receipt</h3>
+          <p>The model never chooses the final state. Contract logic derives OBSERVED, NOT_OBSERVED, INCONCLUSIVE or EXTERNAL_FAILURE.</p>
+        </article>
+      </div>
+
+      <section className="boundary-section">
+        <div>
+          <p className="eyebrow">Why precommitment matters</p>
+          <h2>Two receipts. Different strength.</h2>
+        </div>
+        <div className="boundary-cards">
+          <article className="boundary-card strong">
+            <StatusPill value="PRECOMMITTED" />
+            <h3>Strong absence receipt</h3>
+            <p>The full source universe was sealed before the window opened. A finalized NOT_OBSERVED result can satisfy <code>can_rely_on_absence()</code>.</p>
+          </article>
+          <article className="boundary-card">
+            <StatusPill value="RETROSPECTIVE" />
+            <h3>Historical observation record</h3>
+            <p>The case was sealed after the window began. It can record what sources show, but it can never masquerade as a precommitted negative proof.</p>
+          </article>
+        </div>
+      </section>
+    </section>
+  )
+}
+
+function Metric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="metric">
+      <strong>{value}</strong>
+      <span>{label}</span>
+    </div>
+  )
+}
+
+function CreateCase({
+  busy,
+  walletReady,
+  onConnect,
+  onCreated,
+}: {
+  busy: string
+  walletReady: boolean
+  onConnect: () => void
+  onCreated: (args: unknown[]) => Promise<void>
+}) {
+  const [form, setForm] = useState({
+    title: '',
+    event: '',
+    rule: '',
+    context: '',
+    start: '',
+    end: '',
+  })
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    if (!walletReady) return onConnect()
+    const start = unixFromLocal(form.start)
+    const end = unixFromLocal(form.end)
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return
+    await onCreated([form.title, form.event, form.rule, form.context, start, end])
+  }
+
+  return (
+    <section className="create-page">
+      <div className="create-intro">
+        <p className="eyebrow">New observation</p>
+        <h1>Define the event before you define the evidence.</h1>
+        <p>
+          The source universe is added after the draft is created. Seal it before the
+          observation window starts to earn PRECOMMITTED status.
+        </p>
+        <div className="rule-callout">
+          <span>Key rule</span>
+          <strong>A mandatory source must have a defensible coverage rule.</strong>
+          <p>“This official log lists every disclosure during the window” is useful. “Check this website” is not.</p>
+        </div>
+      </div>
+
+      <form className="create-form" onSubmit={submit}>
+        <label>
+          Case title
+          <input
+            required
+            maxLength={120}
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            placeholder="Q3 security disclosure observation"
+          />
+        </label>
+        <label>
+          Event definition
+          <textarea
+            required
+            value={form.event}
+            onChange={(e) => setForm({ ...form, event: e.target.value })}
+            placeholder="Project Atlas publishes its Q3 security disclosure to the public."
+          />
+        </label>
+        <label>
+          What counts as occurrence?
+          <textarea
+            required
+            value={form.rule}
+            onChange={(e) => setForm({ ...form, rule: e.target.value })}
+            placeholder="A qualifying occurrence must be the actual disclosure, not a teaser, roadmap promise or third-party rumor."
+          />
+        </label>
+        <label>
+          Context
+          <textarea
+            value={form.context}
+            onChange={(e) => setForm({ ...form, context: e.target.value })}
+            placeholder="Optional disambiguating context for validators."
+          />
+        </label>
+        <div className="split-fields">
+          <label>
+            Window starts
+            <input required type="datetime-local" value={form.start} onChange={(e) => setForm({ ...form, start: e.target.value })} />
+          </label>
+          <label>
+            Window ends
+            <input required type="datetime-local" value={form.end} onChange={(e) => setForm({ ...form, end: e.target.value })} />
+          </label>
+        </div>
+        <button className="primary form-submit" disabled={Boolean(busy)}>
+          {busy || (walletReady ? 'Create draft' : 'Connect wallet to create')}
+        </button>
+      </form>
+    </section>
+  )
+}
+
+function CaseDetail({
+  item,
+  sources,
+  wallet,
+  busy,
+  onAddSource,
+  onSeal,
+  onResolve,
+}: {
+  item: ObservationCase
+  sources: ObservationSource[]
+  wallet: string
+  busy: string
+  onAddSource: (args: unknown[]) => Promise<void>
+  onSeal: () => Promise<void>
+  onResolve: () => Promise<void>
+}) {
+  const [showSourceForm, setShowSourceForm] = useState(false)
+  const mine = addressMatch(item.creator, wallet)
+  const now = Math.floor(Date.now() / 1000)
+  const canResolve = (item.status_name === 'SEALED' || item.status_name === 'RETRYABLE')
+    && now >= item.window_end
+    && now >= item.retry_after
+
+  return (
+    <div className="case-detail">
+      <div className="case-titlebar">
+        <div>
+          <p className="eyebrow">Case #{item.case_id}</p>
+          <h2>{item.title}</h2>
+        </div>
+        <div className="title-pills">
+          <StatusPill value={item.mode_name} />
+          <StatusPill value={item.status_name} />
+        </div>
+      </div>
+
+      <div className="receipt-banner">
+        <OutcomeMark outcome={item.outcome_name} />
+        <div>
+          <span>Current result</span>
+          <strong>{item.outcome_name.replaceAll('_', ' ')}</strong>
+          <p>
+            {item.strong_absence_receipt
+              ? 'Precommitted source coverage is complete. This receipt satisfies the strong absence gate.'
+              : item.outcome_name === 'NOT_OBSERVED'
+                ? 'No qualifying occurrence was found, but this is retrospective and cannot satisfy the strong absence gate.'
+                : item.outcome_name === 'OBSERVED'
+                  ? 'At least one reviewed source contains a qualifying in-window occurrence.'
+                  : item.outcome_name === 'INCONCLUSIVE'
+                    ? 'Coverage or event identity was insufficient for a safe negative conclusion.'
+                    : item.outcome_name === 'EXTERNAL_FAILURE'
+                      ? 'A mandatory source could not be inspected. The case may be retried without changing its source universe.'
+                      : 'The source universe has not produced a final observation yet.'}
+          </p>
+        </div>
+      </div>
+
+      <div className="detail-grid">
+        <article className="detail-card wide">
+          <span className="detail-label">Event</span>
+          <p>{item.event_definition}</p>
+        </article>
+        <article className="detail-card wide">
+          <span className="detail-label">Occurrence rule</span>
+          <p>{item.occurrence_rule}</p>
+        </article>
+        <article className="detail-card">
+          <span className="detail-label">Window</span>
+          <strong>{formatDate(item.window_start)}</strong>
+          <span>to {formatDate(item.window_end)}</span>
+        </article>
+        <article className="detail-card">
+          <span className="detail-label">Creator</span>
+          <strong className="mono">{item.creator.slice(0, 12)}…</strong>
+          <span>{mine ? 'Connected creator' : 'Public case'}</span>
+        </article>
+        {item.context && (
+          <article className="detail-card wide">
+            <span className="detail-label">Context</span>
+            <p>{item.context}</p>
+          </article>
+        )}
+      </div>
+
+      <section className="sources-section">
+        <div className="panel-heading">
+          <div>
+            <p className="eyebrow">Frozen universe</p>
+            <h3>Observation sources</h3>
+          </div>
+          {mine && item.status_name === 'DRAFT' && (
+            <button className="secondary compact" onClick={() => setShowSourceForm((value) => !value)}>
+              {showSourceForm ? 'Close' : '+ Add source'}
+            </button>
+          )}
+        </div>
+
+        {showSourceForm && item.status_name === 'DRAFT' && (
+          <SourceForm
+            busy={busy}
+            onSubmit={async (args) => {
+              await onAddSource(args)
+              setShowSourceForm(false)
+            }}
+          />
+        )}
+
+        <div className="source-table">
+          <div className="source-table-head">
+            <span>Source</span>
+            <span>Coverage</span>
+            <span>Occurrence</span>
+          </div>
+          {sources.length === 0 && <div className="empty">No sources registered.</div>}
+          {sources.map((source) => (
+            <div className="source-row" key={source.source_id}>
+              <div>
+                <div className="source-name">
+                  <strong>{source.label}</strong>
+                  {source.mandatory && <span className="required-tag">required</span>}
+                </div>
+                <a href={source.url} target="_blank" rel="noreferrer">{source.source_class_name.replaceAll('_', ' ')} ↗</a>
+                <p>{source.coverage_rule}</p>
+              </div>
+              <div>
+                <StatusPill value={source.coverage_name} />
+                <small>{source.fetch_name.replaceAll('_', ' ')}</small>
+              </div>
+              <div>
+                <StatusPill value={source.occurrence_name} />
+                <small>{source.reviewed_at ? formatDate(source.reviewed_at) : 'not reviewed'}</small>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="hashes">
+        <HashLine label="Definition hash" value={item.definition_hash} />
+        <HashLine label="Resolution hash" value={item.resolution_hash} />
+        <HashLine label="Receipt hash" value={item.receipt_hash} />
+        {item.retry_after > 0 && <div className="hash-line"><span>Retry available</span><code>{formatDate(item.retry_after)}</code></div>}
+        {item.resolved_at > 0 && <div className="hash-line"><span>Last finalized review</span><code>{formatDate(item.resolved_at)}</code></div>}
+      </section>
+
+              <div className="case-actions">
+        {mine && item.status_name === 'DRAFT' && (
+          <button className="primary" onClick={onSeal} disabled={Boolean(busy) || sources.length === 0}>
+            {busy || 'Seal source universe'}
+          </button>
+        )}
+        {canResolve && (
+          <button className="primary" onClick={onResolve} disabled={Boolean(busy)}>
+            {busy || (item.status_name === 'RETRYABLE' ? 'Retry observation' : 'Resolve observation')}
+          </button>
+        )}
+        {(item.status_name === 'SEALED' || item.status_name === 'RETRYABLE') && !canResolve && (
+          <span className="action-note">
+            {Date.now() / 1000 < item.window_end
+              ? `Resolution unlocks after ${formatDate(item.window_end)}.`
+              : `Retry unlocks after ${formatDate(item.retry_after)}.`}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function SourceForm({
+  busy,
+  onSubmit,
+}: {
+  busy: string
+  onSubmit: (args: unknown[]) => Promise<void>
+}) {
+  const [form, setForm] = useState({
+    label: '',
+    url: '',
+    sourceClass: 1,
+    coverage: '',
+    mandatory: true,
+  })
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    await onSubmit([form.label, form.url, form.sourceClass, form.coverage, form.mandatory])
+  }
+
+  return (
+    <form className="source-form" onSubmit={submit}>
+      <label>
+        Source label
+        <input required value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} placeholder="Official disclosures log" />
+      </label>
+      <label>
+        HTTPS URL
+        <input required type="url" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://example.org/disclosures" />
+      </label>
+      <label>
+        Source class
+        <select value={form.sourceClass} onChange={(e) => setForm({ ...form, sourceClass: Number(e.target.value) })}>
+          {SOURCE_CLASSES.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}
+        </select>
+      </label>
+      <label className="wide-field">
+        Coverage rule
+        <textarea required value={form.coverage} onChange={(e) => setForm({ ...form, coverage: e.target.value })} placeholder="This official log lists every qualifying disclosure and publication date throughout the full requested window." />
+      </label>
+      <label className="check-field">
+        <input
+          type="checkbox"
+          checked={form.mandatory}
+          disabled={form.sourceClass === 5}
+          onChange={(e) => setForm({ ...form, mandatory: e.target.checked })}
+        />
+        Required for negative coverage
+      </label>
+      <button className="primary compact" disabled={Boolean(busy)}>{busy || 'Register source'}</button>
+    </form>
+  )
+}
+
+function HashLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="hash-line">
+      <span>{label}</span>
+      <code title={value}>{shortHash(value)}</code>
+    </div>
+  )
+}
+
+export default App
