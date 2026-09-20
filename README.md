@@ -24,7 +24,7 @@ A deterministic smart contract can freeze URLs, timestamps, hashes and state tra
 
 A `PRECOMMITTED` case seals its source universe before the observation window begins. A finalized `NOT_OBSERVED` result can satisfy `can_rely_on_absence(case_id, definition_hash, receipt_hash)`. A `RETROSPECTIVE` negative can never satisfy that gate.
 
-Live case 6 now proves the strong path on the canonical deployment: `PRECOMMITTED`, `FINAL`, `NOT_OBSERVED`, source `OK / COMPLETE / OUTSIDE_ONLY`, `strong_absence_receipt=true`, `can_rely_on_absence=true`, and `receipt_matches=true`. Its definition hash is `03b3b49624844581159b5135c387df0b5d03902aa63558ce00e8add07971697c`, receipt hash is `f2580b0ec498964c9a6a701c6f697a662d4417b35f6f57c750e11dae003f846b`, and resolve transaction is [`0xeb5c41353f656644507ae134ec7cee73793b9f7dfaf2ca2a09d2e120d73843f4`](https://explorer-studio.genlayer.com/tx/0xeb5c41353f656644507ae134ec7cee73793b9f7dfaf2ca2a09d2e120d73843f4).
+Live case 6 proves the strong path on the canonical deployment: `PRECOMMITTED`, `FINAL`, `NOT_OBSERVED`, source `OK / COMPLETE / OUTSIDE_ONLY`, `strong_absence_receipt=true`, `can_rely_on_absence=true`, and `receipt_matches=true`. Definition hash: `03b3b49624844581159b5135c387df0b5d03902aa63558ce00e8add07971697c`. Receipt hash: `f2580b0ec498964c9a6a701c6f697a662d4417b35f6f57c750e11dae003f846b`. Resolve transaction: [`0xeb5c41353f656644507ae134ec7cee73793b9f7dfaf2ca2a09d2e120d73843f4`](https://explorer-studio.genlayer.com/tx/0xeb5c41353f656644507ae134ec7cee73793b9f7dfaf2ca2a09d2e120d73843f4).
 
 ## Deterministic outcome rules
 
@@ -40,13 +40,20 @@ There is exactly one deployable Intelligent Contract: `contracts/abscene.py`. Th
 
 ## Network and production
 
-Abscene targets GenLayer StudioNet, chain ID `61999`. The canonical deployment is finalized and Explorer verified. Deployed source commit: `050613bd383ea6a705850306fbf9db33ba2b3314`. Deployed source SHA-256: `c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1`.
+Abscene targets GenLayer StudioNet only.
+
+- Chain ID: `61999`
+- RPC: `https://studio.genlayer.com/api`
+- Explorer: `https://explorer-studio.genlayer.com`
+- Currency: `GEN`
+
+The canonical deployment is finalized and Explorer verified. Deployed source commit: `050613bd383ea6a705850306fbf9db33ba2b3314`. Deployed source SHA-256: `c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1`.
 
 Production frontend: [https://abscene.vercel.app/](https://abscene.vercel.app/).
 
 ## Verified live evidence
 
-The canonical contract now demonstrates:
+The canonical contract demonstrates:
 
 - case 2: `OBSERVED`, `OK / COMPLETE / IN_WINDOW`, typed observed gate true;
 - case 3: `INCONCLUSIVE`, `OK / PARTIAL / NONE`;
