@@ -1,0 +1,33 @@
+name: Precommitted Proof
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/scripts/precommit-proof.mjs'
+      - '.github/workflows/precommit-proof.yml'
+  workflow_dispatch:
+
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install frontend dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Run precommitted StudioNet proof
+        run: node scripts/precommit-proof.mjs
+      - name: Upload proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: abscene-precommit-proof
+          path: frontend/artifacts/precommit-proof.json
+          if-no-files-found: warn
