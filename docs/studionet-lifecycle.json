@@ -16,17 +16,215 @@
     "finality": "FINALIZED",
     "execution_result": "SUCCESS",
     "consensus_result": "Accepted",
-    "created_at_explorer": "Sep 20, 2026, 10:06:49 PM",
+    "created_at_explorer": "2026-09-20T21:06:49Z",
     "deployer": "0xee489567BDC0F52ab858E10a1d568f692135C089",
     "git_commit": "050613bd383ea6a705850306fbf9db33ba2b3314",
     "source_sha256": "c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1",
     "source_parity": {
       "status": "verified",
       "github_main_sha256": "c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1",
-      "github_byte_count": 33485,
-      "explorer_source_readback": "The Explorer Contract > Code tab displays the deployed Abscene source; the exact GitHub main source file was uploaded for this deployment."
+      "github_byte_count": 33485
     }
   },
-  "cases": [],
-  "note": "Deployment is Explorer-verified. No finalized lifecycle case transactions have been recorded yet; cases must be added only after StudioNet transaction and contract readback verification."
+  "quality": {
+    "github_actions": "success",
+    "direct_mode_contract_tests": 25,
+    "static_source_tests": 9,
+    "total_tests": 34,
+    "genvm_lint": "pass",
+    "genvm_abi_schema": "pass",
+    "frontend_typecheck": "pass",
+    "frontend_build": "pass"
+  },
+  "cases": [
+    {
+      "case_id": 1,
+      "proof_role": "precommitted_external_failure",
+      "title": "Apple SEC 8-K short-window observation",
+      "creator": "0x39680bd423437C0Eaa18493629652821Ec672C61",
+      "mode": "PRECOMMITTED",
+      "status": "RETRYABLE",
+      "outcome": "EXTERNAL_FAILURE",
+      "attempt_count": 1,
+      "strong_absence_receipt": false,
+      "window_start": "2026-09-20T22:33:09Z",
+      "window_end": "2026-09-20T22:43:09Z",
+      "definition_hash": "627f23f7444aaa56797ff846a6b9397f28516f51a47ba68162c90c67ca2c0c0c",
+      "resolution_hash": "4d4ed4d793d2fee01a4f35b4d089a173b3e72d4971553411b62810c2f28aa071",
+      "receipt_hash": "c4d1d2fb069e3ec62e1b11637883dec42128c0fbb94a8475c5bbfd403ce1dd95",
+      "source": {
+        "source_id": 1,
+        "label": "SEC EDGAR Apple 8-K feed",
+        "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=320193&type=8-K&dateb=&owner=exclude&count=40&output=atom",
+        "source_class": "OFFICIAL_FEED",
+        "mandatory": true,
+        "fetch": "UNAVAILABLE",
+        "coverage": "UNKNOWN",
+        "occurrence": "AMBIGUOUS"
+      },
+      "transactions": {
+        "create_case": "0xece8e10f954a88f49ba4b1b9ff5805d9ed1a2d6c974bf559472a164b543b5790",
+        "add_source": "0x8a0ceda3cc352cd2a02b6fb495425de8748774c031b80e806571f3f3dfe18dfd",
+        "seal_case": "0x8a3a6caf0b1a822802e9012e9b78a79201de983c3897625db3719c4354dbb24c",
+        "resolve_case": "0x9243530a1bd4f3125346b620f3710b37f9b519d5e7f58984bf989a98e598f299"
+      }
+    },
+    {
+      "case_id": 2,
+      "proof_role": "observed",
+      "title": "Apple FY2025 Q2 results release",
+      "creator": "0x39680bd423437C0Eaa18493629652821Ec672C61",
+      "mode": "RETROSPECTIVE",
+      "status": "FINAL",
+      "outcome": "OBSERVED",
+      "attempt_count": 1,
+      "strong_absence_receipt": false,
+      "definition_hash": "e21feb5b37b34885c6a3adc6c083cca535cf678695c47b330ee847477da8d576",
+      "resolution_hash": "30a5e48a2496a00e410bc53709ecba0683c0a13cefd931b374c10915007b6bda",
+      "receipt_hash": "768382a8e23f5bfd77cb52fea3e36e2f2bba5dfe8c3a49b3a0ed83de50e320a5",
+      "typed_readback": {
+        "is_observed": true,
+        "can_rely_on_absence": false,
+        "receipt_matches": true
+      },
+      "source": {
+        "source_id": 2,
+        "label": "Apple FY25 Q2 official release",
+        "url": "https://www.apple.com/newsroom/2025/05/apple-reports-second-quarter-results/",
+        "source_class": "OFFICIAL_LOG",
+        "mandatory": true,
+        "fetch": "OK",
+        "coverage": "COMPLETE",
+        "occurrence": "IN_WINDOW"
+      },
+      "transactions": {
+        "create_case": "0x86760ca3752fc249083c87e83fbfc174347ff556a2043c4a90af55db458bef8b",
+        "add_source": "0x0301ef9f5d30714ff88eae3a8070aebe4e5c832d17b7381574a6e093f9564a48",
+        "seal_case": "0xcbd8bf71d38965ddb843789d6d799f7fc2a9e1a4da6bd1fc8a0f485ee8e9e7e6",
+        "resolve_case": "0xa7eefe52ef198250543d1843f3aca6e433560867b132b92696d8d6aff77da6c3"
+      }
+    },
+    {
+      "case_id": 3,
+      "proof_role": "inconclusive",
+      "title": "Apple vehicle announcement in Q2 release",
+      "creator": "0xA49c51d759790116D451f256654dD9F0549D341F",
+      "mode": "RETROSPECTIVE",
+      "status": "FINAL",
+      "outcome": "INCONCLUSIVE",
+      "attempt_count": 1,
+      "strong_absence_receipt": false,
+      "definition_hash": "a2a08aa01fb8e499881702b0b885389da677326abe059a1d7195d3ce814d8526",
+      "resolution_hash": "6f404aba3df105c048fd9406e49c782c2405c94a1904d8298d18c24dec698dc7",
+      "receipt_hash": "7b5e94d071996107b2253ed64365fba88e8430f1dcf46669b3ece0cc434f94e1",
+      "typed_readback": {
+        "is_observed": false,
+        "can_rely_on_absence": false,
+        "receipt_matches": true
+      },
+      "source": {
+        "source_id": 3,
+        "label": "Apple FY25 Q2 official release",
+        "url": "https://www.apple.com/newsroom/2025/05/apple-reports-second-quarter-results/",
+        "source_class": "OFFICIAL_LOG",
+        "mandatory": true,
+        "fetch": "OK",
+        "coverage": "PARTIAL",
+        "occurrence": "NONE"
+      },
+      "transactions": {
+        "create_case": "0x312a951e421ad658773df8e3ccdd1173fe7422e3190f9dcb32ce9ed871a3e93f",
+        "add_source": "0x586121499246fa48c498cefa77fee2e92be76889d0f465f8750d19a9c715ff25",
+        "seal_case": "0x3c1a0e41502eaf0309b63abf6d009a79222eeb0124f2f9b08bea78c66c699326",
+        "resolve_case": "0xe5f6bcb704f1d7700b500b8b8bafc69689da08596a875e4463fc4a60c8e085f0"
+      }
+    },
+    {
+      "case_id": 4,
+      "proof_role": "retrospective_not_observed",
+      "title": "Apple release headline exact-match check",
+      "creator": "0x39680bd423437C0Eaa18493629652821Ec672C61",
+      "mode": "RETROSPECTIVE",
+      "status": "FINAL",
+      "outcome": "NOT_OBSERVED",
+      "attempt_count": 1,
+      "strong_absence_receipt": false,
+      "definition_hash": "daf6ee9ff96d4f85475cf8099ea0cf15e7b79e1cf253ac19635b944ce89b97bf",
+      "resolution_hash": "369ea7d593552ea9fa9f02ed4b5a7b5f1c36fa34e05075678a5dc77919e8fb6e",
+      "receipt_hash": "e84076e209acdb92d1b7ab3bd6e8b1d9426403e74074d73fe983711c856edaba",
+      "typed_readback": {
+        "is_observed": false,
+        "can_rely_on_absence": false,
+        "receipt_matches": true
+      },
+      "source": {
+        "source_id": 4,
+        "label": "Apple FY25 Q2 page headline",
+        "url": "https://www.apple.com/newsroom/2025/05/apple-reports-second-quarter-results/",
+        "source_class": "OFFICIAL_LOG",
+        "mandatory": true,
+        "fetch": "OK",
+        "coverage": "COMPLETE",
+        "occurrence": "NONE"
+      },
+      "transactions": {
+        "create_case": "0xe48b63e4e8515f63f8d1e570817420f6681fee5949d2fd8dc5674abb75f33d08",
+        "add_source": "0x6a29311306b67051588b6960971674c0db630de186c8fdb65095de88bfff2a4d",
+        "seal_case": "0x1720a580c51670652ef58f654a24d6a483920c97baa4767cae3aa1afec6873d0",
+        "resolve_case": "0xb4f1fea85581fd748750aca20cffddd5a6093beb06cb9ef560303ac64a7f9d8c"
+      }
+    },
+    {
+      "case_id": 5,
+      "proof_role": "external_failure_retry",
+      "title": "SEC Apple 8-K feed retry test",
+      "creator": "0xA49c51d759790116D451f256654dD9F0549D341F",
+      "mode": "RETROSPECTIVE",
+      "status": "RETRYABLE",
+      "outcome": "EXTERNAL_FAILURE",
+      "attempt_count": 2,
+      "strong_absence_receipt": false,
+      "definition_hash": "65785507711528dbe9505a8b47146d51c26cbc5ead651a96b96d254eaa453c32",
+      "resolution_hash": "f51c7361291cf117a472acf12faea7faa407596e74a40e341f6796fa827502b8",
+      "receipt_hash": "b63f8e570d34e79189bad029a037eefad5baf2834702c4504cc1e666d7b397c9",
+      "source": {
+        "source_id": 5,
+        "label": "SEC EDGAR Apple 8-K feed",
+        "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=320193&type=8-K&dateb=&owner=exclude&count=40&output=atom",
+        "source_class": "OFFICIAL_FEED",
+        "mandatory": true,
+        "fetch": "UNAVAILABLE",
+        "coverage": "UNKNOWN",
+        "occurrence": "AMBIGUOUS"
+      },
+      "transactions": {
+        "create_case": "0x7aea4b79fec00639da8b73c2b1abada82097302298629e02b9dfe3b159e9d964",
+        "add_source": "0x3a345c3b01c110d7535f2f9488cae74db3d0160bd9be27f2b67af00acd07c4f2",
+        "seal_case": "0x9aec4fcd375824fdd562051d645e3e27906aa45c7066ad287a88098f5e70e62e",
+        "resolve_attempt_1_external_failure": "0x7af354bf369a5ff137105f8c3b8a84f9a806601f2b7c88e6715ac983725ec345",
+        "early_retry_rollback_1": "0x3f18cb45e6fd596fa5dc988963f88bb67701cef0027f88afb406dc2ccdce137a",
+        "resolve_attempt_2_external_failure": "0x252cf40d58a65a67df6d4fbd33e0c3b5562e13381522deb72f4250731451d6c7",
+        "early_retry_rollback_2": "0xc8940f69f012cdbcca58090c7fe8ba5a8e55c807845a5a4ebeba751c10fc1c27"
+      },
+      "retry_evidence": {
+        "definition_hash_unchanged": true,
+        "retry_delay_enforced": true,
+        "second_state_changing_attempt_recorded": true,
+        "recovery_to_final_state": false
+      }
+    }
+  ],
+  "proof_summary": {
+    "observed": "verified",
+    "inconclusive": "verified",
+    "retrospective_not_observed_with_gate_false": "verified",
+    "external_failure_and_retry_mechanics": "verified_partial_recovery_not_finalized",
+    "precommitted_not_observed_with_gate_true": "outstanding"
+  },
+  "readback": {
+    "method": "public StudioNet contract reads plus Explorer transaction decoding from a GitHub Actions runner",
+    "workflow_run": 35543751011,
+    "artifact": "abscene-live-readback",
+    "artifact_digest": "sha256:0d2d4f6e28f328705d1676839bba2bff62da5d500ab16f7d8935b852d6d20e4b"
+  }
 }
