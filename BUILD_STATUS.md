@@ -11,7 +11,7 @@
 - Definition, resolution, and receipt hashes with typed consumer gates
 - Full React/Vite frontend with injected wallet connection and StudioNet 61999 checks
 - Reviewer case registry, source/result visibility, retry controls, and Explorer links
-- 34 passing GenLayer Direct Mode tests
+- 25 passing Direct Mode contract tests + 9 passing static/source tests (34 total)
 - CI, preflight checks, and architecture/security/reviewer documentation
 
 ## StudioNet deployment
@@ -27,18 +27,19 @@
 
 See [`docs/LIVE_EVIDENCE.md`](docs/LIVE_EVIDENCE.md) and [`docs/studionet-lifecycle.json`](docs/studionet-lifecycle.json) for observed deployment evidence.
 
-## Still outstanding
+## Submission blockers still open
 
 - Finalized live lifecycle proofs for `OBSERVED`, precommitted and retrospective `NOT_OBSERVED`, `INCONCLUSIVE`, and `EXTERNAL_FAILURE` followed by retry
-- GenVM SDK semantic validation/typecheck/schema: the installed cache previously failed with Windows `WinError 5`; static lint succeeded
-- Production frontend deployment, which the user will perform in Vercel
+- GenVM SDK semantic validation/typecheck/schema could not complete locally: the installed cache fails with Windows `WinError 5`; the CI GenVM lint step itself passed
+- Production frontend deployment and live interaction verification: no Vercel team/project credentials are available in this session, and no production URL is verified
+- Finalized StudioNet lifecycle proofs have not been run; the JSON evidence intentionally contains no case records
 
 ## Recorded local quality gates
 
 - `python -m py_compile contracts/abscene.py`: pass
 - `python scripts/preflight.py`: pass; one deployable contract; chain ID 61999
-- `pytest -q`: pass, 34 Direct Mode tests
-- `genvm-lint check contracts/abscene.py`: 3 static lint checks pass; semantic validation/typecheck/schema remain blocked by the inaccessible SDK cache
+- `pytest -q`: pass, 34 total (25 Direct Mode contract tests; 9 static/source tests)
+- `genvm-lint check contracts/abscene.py`: 3 static lint checks pass; `validate` and `schema` remain blocked locally by inaccessible cached SDK files
 - `npm --prefix frontend run typecheck`: pass
 - `npm --prefix frontend run build`: pass (Vite warns that the GenLayer client bundle exceeds 500 kB)
 
@@ -48,3 +49,5 @@ Vercel environment values after frontend deployment:
 VITE_CONTRACT_ADDRESS=0x5402F3B8c999945f36a5e76395aC71b7f66dF024
 VITE_EXPLORER_BASE=https://explorer-studio.genlayer.com
 ```
+
+Direct Mode pins `sdk_version="v0.2.16"` through the supported `direct_deploy` override. This avoids genlayer-test 0.29.2 resolving `latest` to GenVM rc7, whose release lacks the `genvm-universal.tar.xz` asset expected by that test runner. The v0.2.16 release publishes the expected universal bundle; no tests are skipped or xfailed.

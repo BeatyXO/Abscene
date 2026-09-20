@@ -30,3 +30,7 @@ Required live branches still to run:
 - `EXTERNAL_FAILURE` followed by a successful retry with the same definition hash
 
 Add case IDs, source IDs, transaction hashes, finalized classifications, timestamps, hashes, and typed-read results to `docs/studionet-lifecycle.json` after Explorer and contract readback verification.
+
+## Source and receipt boundary
+
+The deployed source is unchanged from the recorded deployment hash. Its single semantic prompt includes bounded content from fetched sources, with all user/source text explicitly marked untrusted; validators independently re-fetch and rederive bounded classifications, and deterministic contract code derives the final outcome. Cross-source influence within that shared context remains a documented residual risk. Exact fetched response bytes are not committed: public pages can change or differ harmlessly between validators, so receipts bind the frozen source definitions and consensus classifications rather than acting as content archives.

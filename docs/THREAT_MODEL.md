@@ -22,9 +22,13 @@
 
 **Threat:** A page contains instructions aimed at the model.
 
-**Control:** The prompt explicitly treats source content, URLs, event text, context and coverage rules as untrusted data. Consensus compares only bounded classification enums.
+**Control:** The prompt explicitly treats source content, URLs, event text, context and coverage rules as untrusted data. Consensus compares only bounded classification enums, validators independently rederive those classifications, and deterministic contract code chooses the outcome. In the current version, fetched sources share one semantic prompt, leaving a residual cross-source influence risk. Per-source isolation is a plausible defense-in-depth improvement, but would change the consensus execution/cost/failure surface and is deferred to a separately tested and redeployed protocol revision.
 
 Direct Mode includes a hostile fetched-page fixture that says to return `COMPLETE` and `NONE`; the case remains `INCONCLUSIVE` when the bounded model output is `UNKNOWN`/`AMBIGUOUS`. Newlines from fetched content remain visible in the prompt data encoding.
+
+## Evidence-byte provenance
+
+Receipts bind the frozen definitions, classifications, outcome, resolution hash and receipt hash, not exact fetched response bytes. This avoids making consensus depend on byte-for-byte equality for dynamic public pages. Consequently, a receipt is not an archive or a proof of the exact payload a particular validator received; a consumer needing archival provenance must retain independently timestamped snapshots as supplementary evidence.
 
 ## Model authority expansion
 

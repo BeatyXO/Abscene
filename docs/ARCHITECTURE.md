@@ -71,7 +71,7 @@ Each validator:
 
 The classifier prompt explicitly marks the event text, occurrence rule, context, source URLs, coverage rules and fetched content as untrusted data. Source payload JSON preserves embedded newlines so instruction-like content remains visibly inside the source data object rather than being merged into protocol instructions.
 
-The prompt labels event text, occurrence rules, coverage rules, URLs and fetched source content as untrusted data.
+The prompt labels event text, occurrence rules, coverage rules, URLs and fetched source content as untrusted data. All source bodies share one semantic context in this version, so a malicious source could attempt cross-source influence even though it cannot directly select the outcome. The contract limits this by freezing each source definition, delimiting the data, accepting only bounded enums, independently re-deriving classifications in validators, and deriving the final outcome deterministically. Per-source model calls would reduce cross-source influence but alter consensus behavior and increase cost/failure surface; it is not introduced without a dedicated protocol revision and live parity testing.
 
 ## Deterministic boundary
 
@@ -104,6 +104,8 @@ A retry:
 `resolution_hash` commits the attempt's source classifications and derived outcome.
 
 `receipt_hash` commits the definition hash, resolution hash, mode, window and final outcome.
+
+Fetched body bytes are intentionally not included in the receipt. Public pages are dynamic, and validators can receive harmless byte-level differences from the same URL; requiring exact-byte agreement could make valid observations brittle or prevent consensus. The receipt instead binds the frozen source universe and the consensus-backed bounded classifications/outcome. It does not claim to be a durable archive or cryptographic proof of the exact bytes served; applications needing archival provenance should preserve independently timestamped source snapshots outside this contract and treat them as supplementary evidence.
 
 Downstream consumers can use:
 

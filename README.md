@@ -2,6 +2,18 @@
 
 **Consensus-backed observation receipts for bounded non-occurrence claims on GenLayer.**
 
+| Submission fact | Verified value |
+|---|---|
+| Network | GenLayer StudioNet, chain ID `61999` |
+| Canonical contract | [`0x5402F3B8c999945f36a5e76395aC71b7f66dF024`](https://explorer-studio.genlayer.com/address/0x5402F3B8c999945f36a5e76395aC71b7f66dF024) |
+| Deployment transaction | [`0x16fce2914ce39a3300dd4ad246fb4e6f59265c10123a1425295605a18ded4fab`](https://explorer-studio.genlayer.com/tx/0x16fce2914ce39a3300dd4ad246fb4e6f59265c10123a1425295605a18ded4fab) |
+| Deployed source SHA-256 / parity | `c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1` / verified |
+| Local quality | 25 Direct Mode + 9 static tests passing (34 total); frontend typecheck/build passing |
+| Live lifecycle proofs | Not yet recorded; see [live evidence](docs/LIVE_EVIDENCE.md) |
+| Production frontend | Not deployed/verified; no production URL is claimed |
+
+There is exactly one deployable Intelligent Contract: `contracts/abscene.py`. `NOT_OBSERVED` is bounded evidence for the frozen source universe and window; it does **not** mean the event definitely never happened.
+
 Abscene is a full GenLayer application built around **one Intelligent Contract**. A user freezes:
 
 - a precisely defined event;
@@ -189,7 +201,7 @@ The canonical StudioNet deployment is finalized and Explorer verified:
 - Deployed source commit: `050613bd383ea6a705850306fbf9db33ba2b3314`
 - Deployed source SHA-256: `c8ee61f82a98a5dd40929737f169bdbd5bc1ada5ae2f6bef68ca8336f7962df1`
 
-Live lifecycle cases have not yet been verified. The deployment record does not stand in for case results. After deploying the frontend, configure:
+Live lifecycle cases have not yet been verified. The deployment record does not stand in for case results. The local Direct Mode suite has 25 contract tests; the 9 static/source tests bring the suite to 34. After deploying the frontend, configure:
 
 ```text
 VITE_CONTRACT_ADDRESS=<canonical StudioNet contract address>
@@ -198,7 +210,7 @@ VITE_EXPLORER_BASE=https://explorer-studio.genlayer.com
 
 The repository default is deliberately empty. Never use a placeholder address. For Vercel, add both variables under Project Settings → Environment Variables for Production (and Preview if desired), then redeploy. The build uses `frontend/` as the project root; `vercel.json` defines the install/build/output commands from the repository root.
 
-The local Direct Mode suite and frontend quality gates are tracked in [`BUILD_STATUS.md`](BUILD_STATUS.md). Deployment facts and the remaining live-case verification gap are recorded in [`docs/LIVE_EVIDENCE.md`](docs/LIVE_EVIDENCE.md) and [`docs/studionet-lifecycle.json`](docs/studionet-lifecycle.json). The reviewer flow is in [`docs/REVIEWER_DEMO.md`](docs/REVIEWER_DEMO.md).
+The local quality gates and remaining blockers are tracked in [`BUILD_STATUS.md`](BUILD_STATUS.md). Deployment facts and the live-case verification gap are recorded in [`docs/LIVE_EVIDENCE.md`](docs/LIVE_EVIDENCE.md) and [`docs/studionet-lifecycle.json`](docs/studionet-lifecycle.json). The reviewer flow is in [`docs/REVIEWER_DEMO.md`](docs/REVIEWER_DEMO.md).
 
 ## Submission thesis
 

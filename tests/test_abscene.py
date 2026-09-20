@@ -31,7 +31,11 @@ def addr(name: str):
 def deploy(vm, direct_deploy):
     vm.check_pickling = True
     vm.warp(BASE)
-    return direct_deploy(CONTRACT)
+    # genlayer-test 0.29.2 resolves "latest" to GenVM rc7, whose release no
+    # longer publishes genvm-universal.tar.xz. v0.2.16 is the newest
+    # compatible universal bundle and remains available as a documented
+    # sdk_version override in Direct Mode.
+    return direct_deploy(CONTRACT, sdk_version="v0.2.16")
 
 
 def add_source(
